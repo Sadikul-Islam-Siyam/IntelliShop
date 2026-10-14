@@ -27,19 +27,22 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'phone' => fake()->numerify('01#########'),
             'password' => static::$password ??= Hash::make('password'),
+            'role_id' => null,
+            'branch_id' => null,
+            'status' => 'active',
             'remember_token' => Str::random(10),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Indicate that the user is inactive/deactivated.
      */
-    public function unverified(): static
+    public function inactive(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'status' => 'inactive',
         ]);
     }
 }
