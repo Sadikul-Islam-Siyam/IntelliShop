@@ -112,6 +112,18 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Login Throttling & Lockout Settings (Sub-Feature #3)
+    |--------------------------------------------------------------------------
+    | Lockout after 5 failed logins in 15 minutes (Appendix B / Section 20.2).
+    | Counter in cache keyed by email + IP.
+    */
+    'throttle' => [
+        'max_attempts' => (int) env('AUTH_LOCKOUT_ATTEMPTS', 5),
+        'decay_minutes' => (int) env('AUTH_LOCKOUT_MINUTES', 15),
+    ],
+
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
 ];
