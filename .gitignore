@@ -26,4 +26,5 @@ Thumbs.db
 
 # Testing and coverage
 .phpunit.cache/
+.phpunit.result.cache
 coverage/
