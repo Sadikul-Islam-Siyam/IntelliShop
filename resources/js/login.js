@@ -136,11 +136,23 @@ document.addEventListener('DOMContentLoaded', () => {
                             alertBox.style.display = 'block';
                         }
                     } else if (status === 429) {
+                        let retryAfter = 900;
+                        if (data.error && data.error.retry_after) {
+                            retryAfter = parseInt(data.error.retry_after, 10);
+                        } else if (error.response.headers && error.response.headers['retry-after']) {
+                            retryAfter = parseInt(error.response.headers['retry-after'], 10);
+                        }
+
+                        const mins = Math.max(1, Math.ceil(retryAfter / 60));
+                        const msg = data.error?.message || data.message || `Too many failed login attempts. For security reasons, your account is temporarily locked. Please try again in ${mins} minutes.`;
+
                         if (alertBox) {
                             alertBox.className = 'alert-box alert-danger';
-                            alertBox.textContent = 'Too many login attempts. Please wait a moment before trying again.';
+                            alertBox.textContent = msg;
                             alertBox.style.display = 'block';
                         }
+
+                        startLockoutCountdown(retryAfter);
                     } else if (alertBox) {
                         alertBox.className = 'alert-box alert-danger';
                         alertBox.textContent = data.error?.message || data.message || 'Authentication failed. Please check credentials.';
@@ -152,5 +164,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+    }
+
+    let countdownInterval = null;
+
+    function startLockoutCountdown(totalSeconds) {
+        if (!submitBtn) return;
+        submitBtn.disabled = true;
+        let remaining = totalSeconds;
+
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+
+        const updateBtn = () => {
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            const formatted = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            if (btnText) btnText.textContent = `Locked (${formatted})`;
+            if (btnSpinner) btnSpinner.style.display = 'none';
+        };
+
+        updateBtn();
+
+        countdownInterval = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                submitBtn.disabled = false;
+                if (btnText) btnText.textContent = 'Sign In';
+                if (alertBox) {
+                    alertBox.className = 'alert-box alert-success';
+                    alertBox.textContent = 'Lockout expired. You may now attempt to sign in again.';
+                }
+            } else {
+                updateBtn();
+            }
+        }, 1000);
     }
 });

@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Register middleware aliases
+        $middleware->alias([
+            'login.throttle' => \App\Http\Middleware\LoginThrottle::class,
+        ]);
+
         // Stateful session cookie support for API routes
         $middleware->group('api', [
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
@@ -77,12 +82,21 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 $code = $statusCodes[$e->getStatusCode()] ?? 'ERROR';
 
-                return response()->json([
+                $payload = [
                     'error' => [
                         'code' => $code,
                         'message' => $e->getMessage() ?: 'An error occurred.',
                     ],
-                ], $e->getStatusCode());
+                ];
+
+                if ($e->getStatusCode() === 429) {
+                    $headers = $e->getHeaders();
+                    if (isset($headers['Retry-After'])) {
+                        $payload['error']['retry_after'] = (int) $headers['Retry-After'];
+                    }
+                }
+
+                return response()->json($payload, $e->getStatusCode(), $e->getHeaders());
             }
         });
     })->create();

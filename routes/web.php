@@ -16,7 +16,7 @@ Route::get('/', function () {
 // Authentication Web Routes (Sub-Feature #2)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('login.throttle')->name('login.post');
 });
 
 Route::middleware('auth')->group(function () {

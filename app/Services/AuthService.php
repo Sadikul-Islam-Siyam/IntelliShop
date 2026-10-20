@@ -6,15 +6,21 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * AuthService
  *
- * Implements business logic for Sub-Feature #2: User Registration & Login (Sharif, Week 1).
+ * Implements business logic for:
+ * - Sub-Feature #2: User Registration & Login (Sharif, Week 1)
+ * - Sub-Feature #3: Login Throttling & Lockout (Sharif, Week 1)
  * Features:
  * - Credential verification & password hashing check
  * - Account active status guard
+ * - Rate limiting & lockout after 5 failed attempts in 15 minutes (Appendix B / Section 20.2)
  * - Session regeneration against session fixation (Fig 3.1)
  * - Audit logging for authentication events
  * - User registration with secure defaults
@@ -22,12 +28,78 @@ use Illuminate\Validation\ValidationException;
 class AuthService
 {
     /**
+     * Get the maximum allowed login attempts before lockout.
+     */
+    public static function maxThrottleAttempts(): int
+    {
+        return (int) (config('settings.auth.lockout_attempts') ?? config('auth.throttle.max_attempts', 5));
+    }
+
+    /**
+     * Get the lockout decay duration in seconds (15 minutes = 900s).
+     */
+    public static function throttleDecaySeconds(): int
+    {
+        $minutes = (int) (config('settings.auth.lockout_minutes') ?? config('auth.throttle.decay_minutes', 15));
+        return $minutes * 60;
+    }
+
+    /**
+     * Resolve the unique throttle cache key for an email + IP combination.
+     */
+    public static function throttleKey(string $email, ?string $ip = null): string
+    {
+        $normalizedEmail = Str::lower(trim($email));
+        $resolvedIp = $ip ?: (request()->ip() ?: '127.0.0.1');
+
+        return 'login_throttle:' . sha1($normalizedEmail . '|' . $resolvedIp);
+    }
+
+    /**
+     * Determine if the given email + IP is currently locked out.
+     */
+    public function isLockedOut(string $email, ?string $ip = null): bool
+    {
+        $key = self::throttleKey($email, $ip);
+        return RateLimiter::tooManyAttempts($key, self::maxThrottleAttempts());
+    }
+
+    /**
+     * Clear the throttle counter for an email + IP upon successful login.
+     */
+    public function clearThrottle(string $email, ?string $ip = null): void
+    {
+        $key = self::throttleKey($email, $ip);
+        RateLimiter::clear($key);
+    }
+
+    /**
      * Authenticate user with credentials, regenerate session, and return auth payload.
      *
-     * @throws ValidationException
+     * @throws ValidationException|HttpException
      */
     public function login(string $email, string $password, bool $remember = false, ?Request $request = null): array
     {
+        $ip = $request?->ip() ?? request()->ip() ?? '127.0.0.1';
+
+        // Pre-check for active lockout (Sub-Feature #3)
+        if ($this->isLockedOut($email, $ip)) {
+            $key = self::throttleKey($email, $ip);
+            $secondsRemaining = RateLimiter::availableIn($key);
+            $minutesRemaining = max(1, (int) ceil($secondsRemaining / 60));
+
+            AuditLogger::log(
+                null,
+                'auth.lockout',
+                'users',
+                null,
+                ['email' => $email, 'ip' => $ip, 'retry_after' => $secondsRemaining],
+                $ip
+            );
+
+            throw new HttpException(429, "Too many failed login attempts. Please try again in {$minutesRemaining} minutes.");
+        }
+
         $user = User::with('role')->where('email', $email)->first();
 
         if (!$user || !Hash::check($password, $user->password)) {
@@ -44,6 +116,7 @@ class AuthService
 
         // Perform authentication
         Auth::login($user, $remember);
+        $this->clearThrottle($email, $ip);
 
         // Regenerate session to prevent session fixation attacks (Fig 3.1 / Master Plan)
         if ($request && $request->hasSession()) {
