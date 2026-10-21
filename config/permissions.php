@@ -147,6 +147,7 @@ return [
             'audit_logs.view',
             'branches.view',
             'branches.manage',
+            'branches.manage',
             'units.manage',
             'categories.manage',
             'brands.manage',

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +32,17 @@ Route::prefix('v1')->group(function () {
 
         // User management CRUD
         Route::apiResource('users', UserController::class)->names('api.v1.users');
+
+        Route::middleware('role:admin,branch-manager')->group(function () {
+            Route::get('branches', [BranchController::class, 'index'])->name('api.v1.branches.index');
+            Route::get('branches/{branch}', [BranchController::class, 'show'])->name('api.v1.branches.show');
+        });
+        Route::middleware('role:admin')->group(function () {
+            Route::post('branches', [BranchController::class, 'store'])->name('api.v1.branches.store');
+            Route::put('branches/{branch}', [BranchController::class, 'update'])->name('api.v1.branches.update');
+            Route::patch('branches/{branch}', [BranchController::class, 'update']);
+            Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('api.v1.branches.destroy');
+        });
 
         // System Audit Logs endpoints (Administrator only)
         Route::get('audit-logs', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'index'])
