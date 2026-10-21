@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\SupplierController;
 use App\Http\Controllers\Api\V1\SettingsController;
+use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +45,16 @@ Route::prefix('v1')->group(function () {
             Route::put('branches/{branch}', [BranchController::class, 'update'])->name('api.v1.branches.update');
             Route::patch('branches/{branch}', [BranchController::class, 'update']);
             Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('api.v1.branches.destroy');
+        });
+        Route::middleware('role:admin,branch-manager,sales-employee,cashier')->group(function () {
+            Route::get('customers', [CustomerController::class, 'index'])->name('api.v1.customers.index');
+            Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('api.v1.customers.show');
+        });
+        Route::middleware('role:admin,branch-manager,sales-employee')->group(function () {
+            Route::post('customers', [CustomerController::class, 'store'])->name('api.v1.customers.store');
+            Route::put('customers/{customer}', [CustomerController::class, 'update'])->name('api.v1.customers.update');
+            Route::patch('customers/{customer}', [CustomerController::class, 'update']);
+            Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('api.v1.customers.destroy');
         });
 
         Route::middleware('role:admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
