@@ -76,6 +76,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Relationship: Audit logs associated with this user.
+     */
+    public function auditLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AuditLog::class, 'user_id');
+    }
+
+    /**
      * Scope a query to only include active users.
      */
     public function scopeActive(Builder $query): Builder
