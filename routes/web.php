@@ -10,22 +10,26 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 });
 
-// Authentication Web Routes (Sub-Feature #2)
+// Authentication web routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('login.throttle')->name('login.post');
 });
 
+// Authenticated dashboard routes
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Dashboard landing route (Sub-Feature #4 completes role-specific routing)
-    Route::get('/dashboard', function () {
-        return view('dashboard', [
-            'user' => auth()->user(),
-        ]);
-    })->name('dashboard');
+    // Dashboard root landing: redirects user to their dedicated role workspace
+    Route::get('/dashboard', [\App\Http\Controllers\Web\DashboardController::class, 'index'])->name('dashboard');
+
+    // Role-specific dashboard route protected by role middleware
+    Route::get('/dashboard/{role}', [\App\Http\Controllers\Web\DashboardController::class, 'show'])
+        ->middleware('role')
+        ->name('dashboard.role');
 });

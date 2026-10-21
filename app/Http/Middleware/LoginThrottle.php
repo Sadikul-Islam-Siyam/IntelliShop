@@ -14,12 +14,11 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * LoginThrottle Middleware
  *
- * Implements Sub-Feature #3: Login Throttling & Lockout (Sharif, Week 1).
  * Rules:
- * - Lockout after 5 failed logins in 15 minutes (configurable in config/auth.php & settings)
- * - Generic error message only (no username enumeration)
+ * - Lockout after 5 failed logins in 15 minutes
+ * - Generic error message only
  * - Counter in cache keyed by email + IP
- * - Returns HTTP 429 with standard Section 20.2 JSON payload and Retry-After header
+ * - Returns HTTP 429 with standard JSON payload and Retry-After header
  * - Sensitive audit logging on lockout events
  */
 class LoginThrottle

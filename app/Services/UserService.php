@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 /**
  * UserService
  *
- * Implements user management operations (Sub-Feature #2):
+ * Implements user management operations:
  * Create, Read, Update, Deactivate with audit logging.
  */
 class UserService

@@ -13,9 +13,7 @@ use Illuminate\Support\Str;
 /**
  * IntelliShop User Model
  *
- * Implements Sub-Feature #2: User Registration & Login (Sharif, Week 1).
- * Schema v2 / Appendix D:
- * Table users: id, name, email, password, phone, role_id, branch_id, status, created_at, updated_at.
+ * User entity with role assignment, status, and branch relations.
  */
 class User extends Authenticatable
 {
@@ -128,11 +126,19 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is Super Administrator.
+     * Check if user is Administrator.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(Role::ADMIN) || $this->hasRole('Super Admin');
+    }
+
+    /**
+     * Check if user has administrative bypass privileges.
      */
     public function isSuperAdmin(): bool
     {
-        return $this->hasRole(Role::SUPER_ADMIN);
+        return $this->isAdmin();
     }
 
     /**

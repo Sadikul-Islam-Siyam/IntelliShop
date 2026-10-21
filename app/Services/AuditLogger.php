@@ -5,10 +5,9 @@ namespace App\Services;
 use Illuminate\Support\Facades\Log;
 
 /**
- * AuditLogger Service (Contract Pack Stub - Sub-Feature #73 / #5)
+ * AuditLogger Service
  *
- * Signature: AuditLogger::log(user_id, action, entity_type, entity_id, details, ip)
- * Writes audit trail entries. No-op or log fallback until #5 full foundation lands.
+ * Writes audit trail entries for administrative and sensitive actions.
  */
 class AuditLogger
 {

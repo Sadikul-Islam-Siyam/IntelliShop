@@ -19,7 +19,7 @@ class RoleSeeder extends Seeder
 
         if (empty($canonicalRoles)) {
             $canonicalRoles = [
-                Role::SUPER_ADMIN => [
+                Role::ADMIN => [
                     'description' => 'System-wide administrative control across all branches and modules.',
                 ],
                 Role::BRANCH_MANAGER => [

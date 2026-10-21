@@ -15,13 +15,10 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * AuthService
  *
  * Implements business logic for:
- * - Sub-Feature #2: User Registration & Login (Sharif, Week 1)
- * - Sub-Feature #3: Login Throttling & Lockout (Sharif, Week 1)
- * Features:
  * - Credential verification & password hashing check
  * - Account active status guard
- * - Rate limiting & lockout after 5 failed attempts in 15 minutes (Appendix B / Section 20.2)
- * - Session regeneration against session fixation (Fig 3.1)
+ * - Rate limiting & lockout after 5 failed attempts in 15 minutes
+ * - Session regeneration against session fixation
  * - Audit logging for authentication events
  * - User registration with secure defaults
  */
@@ -82,7 +79,7 @@ class AuthService
     {
         $ip = $request?->ip() ?? request()->ip() ?? '127.0.0.1';
 
-        // Pre-check for active lockout (Sub-Feature #3)
+        // Pre-check for active lockout
         if ($this->isLockedOut($email, $ip)) {
             $key = self::throttleKey($email, $ip);
             $secondsRemaining = RateLimiter::availableIn($key);
@@ -199,8 +196,15 @@ class AuthService
     /**
      * Determine role-based landing URL for post-login redirection.
      */
-    protected function getDashboardRouteForUser(User $user): string
+    public function getDashboardRouteForUser(User $user): string
     {
+        $roleName = $user->role?->name;
+        $map = config('permissions.role_redirect_map', []);
+
+        if ($roleName && isset($map[$roleName])) {
+            return $map[$roleName];
+        }
+
         return '/dashboard';
     }
 }
