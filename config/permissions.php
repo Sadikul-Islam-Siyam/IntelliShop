@@ -201,6 +201,7 @@ return [
             'dashboard.view',
             'branches.view',
             'suppliers.view',
+            'customers.manage',
             'products.view',
             'inventory.view',
             'inventory.transactions.view',
