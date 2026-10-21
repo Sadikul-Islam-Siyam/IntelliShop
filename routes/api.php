@@ -31,6 +31,14 @@ Route::prefix('v1')->group(function () {
 
         // User management CRUD
         Route::apiResource('users', UserController::class)->names('api.v1.users');
+
+        // System Audit Logs endpoints (Administrator only)
+        Route::get('audit-logs', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'index'])
+            ->middleware('role:admin,super-admin')
+            ->name('api.v1.audit-logs.index');
+        Route::get('audit-logs/{id}', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'show'])
+            ->middleware('role:admin,super-admin')
+            ->name('api.v1.audit-logs.show');
     });
 });
 

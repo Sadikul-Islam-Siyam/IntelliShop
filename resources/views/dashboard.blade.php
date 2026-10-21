@@ -41,13 +41,9 @@
         <div class="card">
             <div class="workspace-header">
                 <h2>Welcome to IntelliShop, {{ $user->name ?? 'User' }}!</h2>
-                @if(isset($roleConfig['badge']))
-                    <span class="workspace-badge">{{ $roleConfig['badge'] }}</span>
-                @endif
             </div>
             <p class="welcome-subtitle">
                 Account Status: <span class="status-active">{{ ucfirst($user->status ?? 'active') }}</span>
-                | Role: <strong>{{ $user->role->name ?? 'None' }}</strong>
             </p>
         </div>
 
@@ -69,11 +65,6 @@
                             <div class="module-desc">{{ $module['description'] }}</div>
                         </a>
                     @endforeach
-                </div>
-
-                <div class="live-sync-banner">
-                    <span><span class="live-sync-dot"></span> <span id="sync-status">REST API Session: Connected (/api/v1/dashboard)</span></span>
-                    <span id="sync-role">{{ $roleConfig['role_name'] }} Workspace</span>
                 </div>
             </div>
         @endif
