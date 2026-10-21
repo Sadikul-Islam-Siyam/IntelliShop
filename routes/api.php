@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BranchController;
+use App\Http\Controllers\Api\V1\SupplierController;
+use App\Http\Controllers\Api\V1\SettingsController;
+use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +35,42 @@ Route::prefix('v1')->group(function () {
 
         // User management CRUD
         Route::apiResource('users', UserController::class)->names('api.v1.users');
+
+        Route::middleware('role:admin,branch-manager')->group(function () {
+            Route::get('branches', [BranchController::class, 'index'])->name('api.v1.branches.index');
+            Route::get('branches/{branch}', [BranchController::class, 'show'])->name('api.v1.branches.show');
+        });
+        Route::middleware('role:admin')->group(function () {
+            Route::post('branches', [BranchController::class, 'store'])->name('api.v1.branches.store');
+            Route::put('branches/{branch}', [BranchController::class, 'update'])->name('api.v1.branches.update');
+            Route::patch('branches/{branch}', [BranchController::class, 'update']);
+            Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('api.v1.branches.destroy');
+        });
+        Route::middleware('role:admin,branch-manager,sales-employee,cashier')->group(function () {
+            Route::get('customers', [CustomerController::class, 'index'])->name('api.v1.customers.index');
+            Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('api.v1.customers.show');
+        });
+        Route::middleware('role:admin,branch-manager,sales-employee')->group(function () {
+            Route::post('customers', [CustomerController::class, 'store'])->name('api.v1.customers.store');
+            Route::put('customers/{customer}', [CustomerController::class, 'update'])->name('api.v1.customers.update');
+            Route::patch('customers/{customer}', [CustomerController::class, 'update']);
+            Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('api.v1.customers.destroy');
+        });
+
+        Route::middleware('role:admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
+            Route::get('suppliers', [SupplierController::class, 'index'])->name('api.v1.suppliers.index');
+            Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->name('api.v1.suppliers.show');
+        });
+        Route::middleware('role:admin,purchase-manager')->group(function () {
+            Route::post('suppliers', [SupplierController::class, 'store'])->name('api.v1.suppliers.store');
+            Route::put('suppliers/{supplier}', [SupplierController::class, 'update'])->name('api.v1.suppliers.update');
+            Route::patch('suppliers/{supplier}', [SupplierController::class, 'update']);
+            Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('api.v1.suppliers.destroy');
+        });
+        Route::middleware('role:admin')->group(function () {
+            Route::get('settings', [SettingsController::class, 'index'])->name('api.v1.settings.index');
+            Route::put('settings', [SettingsController::class, 'update'])->name('api.v1.settings.update');
+        });
 
         // System Audit Logs endpoints (Administrator only)
         Route::get('audit-logs', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'index'])

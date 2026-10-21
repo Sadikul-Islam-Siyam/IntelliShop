@@ -147,6 +147,7 @@ return [
             'audit_logs.view',
             'branches.view',
             'branches.manage',
+            'branches.manage',
             'units.manage',
             'categories.manage',
             'brands.manage',
@@ -199,6 +200,8 @@ return [
             'auth.login',
             'dashboard.view',
             'branches.view',
+            'suppliers.view',
+            'customers.manage',
             'products.view',
             'inventory.view',
             'inventory.transactions.view',
@@ -224,6 +227,7 @@ return [
         Role::INVENTORY_MANAGER => [
             'auth.login',
             'dashboard.view',
+            'suppliers.view',
             'units.manage',
             'categories.manage',
             'brands.manage',
@@ -291,6 +295,7 @@ return [
         Role::SYSTEM_ANALYST => [
             'auth.login',
             'dashboard.view',
+            'suppliers.view',
             'reports.sales',
             'reports.inventory',
             'reports.charts',
