@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\SupplierController;
+use App\Http\Controllers\Api\V1\SettingsController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,10 @@ Route::prefix('v1')->group(function () {
             Route::put('suppliers/{supplier}', [SupplierController::class, 'update'])->name('api.v1.suppliers.update');
             Route::patch('suppliers/{supplier}', [SupplierController::class, 'update']);
             Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('api.v1.suppliers.destroy');
+        });
+        Route::middleware('role:admin')->group(function () {
+            Route::get('settings', [SettingsController::class, 'index'])->name('api.v1.settings.index');
+            Route::put('settings', [SettingsController::class, 'update'])->name('api.v1.settings.update');
         });
 
         // System Audit Logs endpoints (Administrator only)
