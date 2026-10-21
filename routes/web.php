@@ -32,4 +32,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/{role}', [\App\Http\Controllers\Web\DashboardController::class, 'show'])
         ->middleware('role')
         ->name('dashboard.role');
+
+    // System Audit Logs page (Administrator only)
+    Route::get('/audit-logs', [\App\Http\Controllers\Web\AuditLogController::class, 'index'])
+        ->middleware('role:admin,super-admin')
+        ->name('audit-logs.index');
 });
