@@ -42,7 +42,14 @@ jobs:
       - run: composer install --no-interaction --prefer-dist
       - run: cp .env.example .env
       - run: php artisan key:generate
-      - run: php artisan migrate --force
+      - name: Create dedicated test database
+        run: mysql --host=127.0.0.1 --user=root --password=root --execute="CREATE DATABASE IntelliShop_testing;"
+      - name: Migrate and seed application database
+        run: php artisan migrate:fresh --seed --force
+      - name: Migrate and seed test database
+        run: php artisan migrate:fresh --seed --force
+        env:
+          DB_DATABASE: IntelliShop_testing
       - run: php artisan test
-      - run: npm install
+      - run: npm ci
       - run: npm run build
