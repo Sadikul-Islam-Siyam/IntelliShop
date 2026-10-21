@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  * Records immutable audit trail entries in the database and structured log channel
  * for all administrative, security, and sensitive business actions.
  */
-class AuditLogger
+class AuditLogger implements \App\Contracts\AuditLogger
 {
     /**
      * Log an administrative or sensitive action to the audit_logs table.
