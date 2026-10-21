@@ -42,6 +42,8 @@ jobs:
       - run: composer install --no-interaction --prefer-dist
       - run: cp .env.example .env
       - run: php artisan key:generate
+      - name: Prepare Laravel runtime directories
+        run: mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache
       - name: Create dedicated test database
         run: mysql --host=127.0.0.1 --user=root --password=root --execute="CREATE DATABASE IntelliShop_testing;"
       - name: Migrate and seed application database
