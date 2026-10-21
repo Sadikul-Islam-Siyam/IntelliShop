@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register middleware aliases
         $middleware->alias([
             'login.throttle' => \App\Http\Middleware\LoginThrottle::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
 
         // Stateful session cookie support for API routes

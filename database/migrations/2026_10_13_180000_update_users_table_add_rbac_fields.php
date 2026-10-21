@@ -8,9 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * Updates users table per Schema v2 (Appendix D) and Sub-Feature #2 (Sharif, Week 1).
-     * Adds phone, role_id (FK -> roles.id), branch_id (FK added in Week 1 Task #6 / circular resolution),
-     * and status columns.
+     * Updates users table with phone, role_id (FK -> roles.id), branch_id, and status columns.
      */
     public function up(): void
     {

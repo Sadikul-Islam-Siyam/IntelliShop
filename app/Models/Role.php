@@ -10,11 +10,8 @@ use Illuminate\Support\Str;
 /**
  * IntelliShop Role Model
  *
- * Implements Sub-Feature #1: Roles & Permissions Schema (Sharif, Week 1).
- * Per Decision M11:
- * "roles table has no permissions column; permission sets in config/permissions.php."
- * Schema v2 / Appendix D:
- * Table roles: id, name, description, timestamps.
+ * Roles table stores role names and descriptions.
+ * Permission sets are defined in config/permissions.php.
  */
 class Role extends Model
 {
@@ -28,7 +25,8 @@ class Role extends Model
     ];
 
     // Canonical Role Names (per IntelliShop Design Documentation)
-    public const SUPER_ADMIN = 'Super Admin';
+    public const ADMIN = 'Admin';
+    public const SUPER_ADMIN = self::ADMIN;
     public const BRANCH_MANAGER = 'Branch Manager';
     public const INVENTORY_MANAGER = 'Inventory Manager';
     public const CASHIER = 'Cashier';
@@ -37,7 +35,7 @@ class Role extends Model
     public const SYSTEM_ANALYST = 'System Analyst';
 
     public const ALL_ROLES = [
-        self::SUPER_ADMIN,
+        self::ADMIN,
         self::BRANCH_MANAGER,
         self::INVENTORY_MANAGER,
         self::CASHIER,

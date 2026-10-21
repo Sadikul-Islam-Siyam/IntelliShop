@@ -19,6 +19,7 @@ services:
       DB_DATABASE: ${DB_DATABASE:-IntelliShop}
       DB_USERNAME: ${DB_USERNAME:-app_user}
       DB_PASSWORD: ${DB_PASSWORD:-local_dev_password}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-local_root_password}
     depends_on:
       mysql:
         condition: service_healthy
@@ -27,8 +28,27 @@ services:
       - -lc
       - |
         if [ ! -f .env ]; then cp .env.example .env; fi
-        if [ ! -f vendor/autoload.php ]; then composer install; fi
-        if ! grep -q '^APP_KEY=base64:' .env; then php artisan key:generate; fi
+        mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache
+        chmod -R 777 storage bootstrap/cache 2>/dev/null || true
+        if [ ! -f vendor/autoload.php ]; then composer install --no-interaction --prefer-dist; fi
+        if ! grep -q '^APP_KEY=base64:' .env; then php artisan key:generate --force; fi
+        php artisan storage:link --quiet 2>/dev/null || true
+        echo "Waiting for MySQL database connection..."
+        until php -r "try { new PDO('mysql:host=mysql;port=3306;dbname=' . getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD')); exit(0); } catch (\Throwable) { exit(1); }"; do
+          sleep 1
+        done
+        php -r "try { (new PDO('mysql:host=mysql;port=3306', 'root', getenv('DB_ROOT_PASSWORD')))->query('CREATE DATABASE IF NOT EXISTS ' . getenv('DB_DATABASE') . '_testing; GRANT ALL PRIVILEGES ON ' . getenv('DB_DATABASE') . '_testing.* TO \'' . getenv('DB_USERNAME') . '\'@\'%\'; FLUSH PRIVILEGES;'); } catch (\Throwable) {}"
+        echo "Database connected. Running migrations and seeders..."
+        php artisan migrate --force
+        php artisan db:seed --force
+        echo ""
+        echo "=========================================================="
+        echo "  IntelliShop Ready!"
+        echo "  Website:     http://localhost:8000"
+        echo "  Login:       http://localhost:8000/login"
+        echo "  phpMyAdmin:  http://localhost:8080"
+        echo "  MySQL:       127.0.0.1:3306 (DB: IntelliShop)"
+        echo ""
         php artisan serve --host=0.0.0.0 --port=8000
 
   mysql:
@@ -56,6 +76,8 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_ROOT_PASSWORD:-local_root_password}
       UPLOAD_LIMIT: 64M
     ports:
       - "127.0.0.1:8080:80"

@@ -114,9 +114,9 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Login Throttling & Lockout Settings (Sub-Feature #3)
+    | Login Throttling & Lockout Settings
     |--------------------------------------------------------------------------
-    | Lockout after 5 failed logins in 15 minutes (Appendix B / Section 20.2).
+    | Lockout after 5 failed logins in 15 minutes.
     | Counter in cache keyed by email + IP.
     */
     'throttle' => [

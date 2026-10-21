@@ -3,10 +3,7 @@
 /**
  * IntelliShop — Role & Permission Matrix Configuration
  *
- * Implements Sub-Feature #1: Roles & Permissions Schema (Sharif, Week 1).
- * Master Implementation Plan Decision M11:
- * "roles table has no permissions column; permission sets in config/permissions.php."
- * Section 2.3: Roles and default access matrix.
+ * Defines the canonical system roles, module permissions, and default access matrix.
  */
 
 use App\Models\Role;
@@ -23,8 +20,8 @@ return [
     |
     */
     'canonical_roles' => [
-        Role::SUPER_ADMIN => [
-            'slug' => 'super_admin',
+        Role::ADMIN => [
+            'slug' => 'admin',
             'description' => 'System-wide administrative control across all branches and modules.',
         ],
         Role::BRANCH_MANAGER => [
@@ -416,6 +413,127 @@ return [
             Role::SUPER_ADMIN => 'full',
             Role::BRANCH_MANAGER => 'limited',
             Role::SYSTEM_ANALYST => 'limited',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Role-Based Dashboard Redirect Map
+    |--------------------------------------------------------------------------
+    | Maps each canonical role to its dedicated dashboard URL path.
+    */
+    'role_redirect_map' => [
+        Role::ADMIN => '/dashboard/admin',
+        Role::BRANCH_MANAGER => '/dashboard/branch-manager',
+        Role::INVENTORY_MANAGER => '/dashboard/inventory-manager',
+        Role::CASHIER => '/dashboard/cashier',
+        Role::SALES_EMPLOYEE => '/dashboard/sales-employee',
+        Role::PURCHASE_MANAGER => '/dashboard/purchase-manager',
+        Role::SYSTEM_ANALYST => '/dashboard/system-analyst',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Role Dashboard Workspace Metadata
+    |--------------------------------------------------------------------------
+    | Workspace titles, badges, descriptions, and primary navigation modules.
+    */
+    'role_dashboards' => [
+        'admin' => [
+            'role_name' => Role::ADMIN,
+            'title' => 'Administrator Workspace',
+            'badge' => 'Full System Control',
+            'description' => 'System-wide administrative control across all branches, configurations, and user privileges.',
+            'modules' => [
+                ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
+                ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
+                ['name' => 'System Audit Logs', 'description' => 'Inspect immutable event and security audit trails.', 'route' => '/audit-logs', 'icon' => 'audit'],
+                ['name' => 'System Settings', 'description' => 'Configure algorithms, thresholds, and business rules.', 'route' => '/settings', 'icon' => 'settings'],
+            ],
+        ],
+        'super-admin' => [
+            'role_name' => Role::ADMIN,
+            'title' => 'Administrator Workspace',
+            'badge' => 'Full System Control',
+            'description' => 'System-wide administrative control across all branches, configurations, and user privileges.',
+            'modules' => [
+                ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
+                ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
+                ['name' => 'System Audit Logs', 'description' => 'Inspect immutable event and security audit trails.', 'route' => '/audit-logs', 'icon' => 'audit'],
+                ['name' => 'System Settings', 'description' => 'Configure algorithms, thresholds, and business rules.', 'route' => '/settings', 'icon' => 'settings'],
+            ],
+        ],
+        'branch-manager' => [
+            'role_name' => Role::BRANCH_MANAGER,
+            'title' => 'Branch Operations Portal',
+            'badge' => 'Branch Operations',
+            'description' => 'Branch-scoped oversight of daily sales, local inventory, staff performance, and stock transfers.',
+            'modules' => [
+                ['name' => 'Branch Inventory', 'description' => 'Monitor local product balances and safety stocks.', 'route' => '/inventory', 'icon' => 'inventory'],
+                ['name' => 'Stock Transfers', 'description' => 'Review and approve stock transfer requests.', 'route' => '/stock-transfers', 'icon' => 'transfers'],
+                ['name' => 'Daily Sales', 'description' => 'Track checkout transactions and cashflow metrics.', 'route' => '/sales', 'icon' => 'sales'],
+                ['name' => 'Staff Overview', 'description' => 'Manage on-duty branch employees and cashiers.', 'route' => '/staff', 'icon' => 'staff'],
+            ],
+        ],
+        'inventory-manager' => [
+            'role_name' => Role::INVENTORY_MANAGER,
+            'title' => 'Inventory & Warehouse Center',
+            'badge' => 'Warehouse & Catalog',
+            'description' => 'Manage product definitions, stock adjustments, batch receipts, and inventory alerts.',
+            'modules' => [
+                ['name' => 'Product Catalog', 'description' => 'Manage categories, brands, SKUs, and retail pricing.', 'route' => '/products', 'icon' => 'products'],
+                ['name' => 'Stock Balances', 'description' => 'Perform stock adjustments and batch tracking.', 'route' => '/inventory', 'icon' => 'stock'],
+                ['name' => 'Stock-Out Alerts', 'description' => 'Inspect low-stock warnings and reorder triggers.', 'route' => '/alerts', 'icon' => 'alerts'],
+                ['name' => 'Goods Receiving', 'description' => 'Receive supplier purchase orders into inventory.', 'route' => '/receiving', 'icon' => 'receiving'],
+            ],
+        ],
+        'cashier' => [
+            'role_name' => Role::CASHIER,
+            'title' => 'Point of Sale Terminal',
+            'badge' => 'POS Checkout',
+            'description' => 'High-speed barcode scanning, cart processing, discount application, and receipt printing.',
+            'modules' => [
+                ['name' => 'POS Terminal', 'description' => 'Launch active barcode checkout interface.', 'route' => '/pos', 'icon' => 'pos'],
+                ['name' => 'Product Lookup', 'description' => 'Check product prices and branch availability.', 'route' => '/lookup', 'icon' => 'search'],
+                ['name' => 'Sales Invoices', 'description' => 'Review completed customer invoices and receipts.', 'route' => '/invoices', 'icon' => 'invoices'],
+                ['name' => 'Daily Register', 'description' => 'View total drawer cash and transaction counts.', 'route' => '/register', 'icon' => 'register'],
+            ],
+        ],
+        'sales-employee' => [
+            'role_name' => Role::SALES_EMPLOYEE,
+            'title' => 'Sales & Customer Hub',
+            'badge' => 'Customer Relations',
+            'description' => 'Customer profiles, segment analytics, loyalty points management, and promotions.',
+            'modules' => [
+                ['name' => 'Customer Directory', 'description' => 'Search and manage registered customer accounts.', 'route' => '/customers', 'icon' => 'customers'],
+                ['name' => 'Loyalty Program', 'description' => 'Manage point balances and rewards redemption.', 'route' => '/loyalty', 'icon' => 'loyalty'],
+                ['name' => 'Promotions', 'description' => 'Inspect active discounts and targeted campaigns.', 'route' => '/promotions', 'icon' => 'promotions'],
+                ['name' => 'Sales History', 'description' => 'Review customer transaction history and items.', 'route' => '/history', 'icon' => 'history'],
+            ],
+        ],
+        'purchase-manager' => [
+            'role_name' => Role::PURCHASE_MANAGER,
+            'title' => 'Procurement & Supplier Center',
+            'badge' => 'Procurement',
+            'description' => 'Supplier relationship management, purchasing orders, replenishment quotes, and vendor performance.',
+            'modules' => [
+                ['name' => 'Supplier Registry', 'description' => 'Manage vendor profiles and contact credentials.', 'route' => '/suppliers', 'icon' => 'suppliers'],
+                ['name' => 'Purchase Orders', 'description' => 'Generate and dispatch draft purchase orders.', 'route' => '/purchase-orders', 'icon' => 'orders'],
+                ['name' => 'Contract Terms', 'description' => 'Maintain vendor MOQs, lead times, and unit costs.', 'route' => '/supplier-terms', 'icon' => 'terms'],
+                ['name' => 'Reorder Calculations', 'description' => 'Review automated stock replenishment advice.', 'route' => '/reorders', 'icon' => 'reorder'],
+            ],
+        ],
+        'system-analyst' => [
+            'role_name' => Role::SYSTEM_ANALYST,
+            'title' => 'Analytics & Decision Intelligence Hub',
+            'badge' => 'AI & Decision Support',
+            'description' => 'Predictive demand forecasting, sales anomaly detection, market basket affinity, and natural-language queries.',
+            'modules' => [
+                ['name' => 'Demand Forecasting', 'description' => 'Inspect baseline and ML sales forecast projections.', 'route' => '/forecasting', 'icon' => 'forecast'],
+                ['name' => 'Anomaly Detection', 'description' => 'Review outlier sales and unusual spikes in demand.', 'route' => '/anomalies', 'icon' => 'anomaly'],
+                ['name' => 'Market Basket Affinity', 'description' => 'Analyze item association rules and cross-sell pairs.', 'route' => '/market-basket', 'icon' => 'affinity'],
+                ['name' => 'Natural Language Query', 'description' => 'Execute natural language business queries.', 'route' => '/nlq', 'icon' => 'nlq'],
+            ],
         ],
     ],
 ];
