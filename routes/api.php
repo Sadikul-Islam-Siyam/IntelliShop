@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
+use App\Http\Controllers\Api\V1\SupplierController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +43,17 @@ Route::prefix('v1')->group(function () {
             Route::put('branches/{branch}', [BranchController::class, 'update'])->name('api.v1.branches.update');
             Route::patch('branches/{branch}', [BranchController::class, 'update']);
             Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('api.v1.branches.destroy');
+        });
+
+        Route::middleware('role:admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
+            Route::get('suppliers', [SupplierController::class, 'index'])->name('api.v1.suppliers.index');
+            Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->name('api.v1.suppliers.show');
+        });
+        Route::middleware('role:admin,purchase-manager')->group(function () {
+            Route::post('suppliers', [SupplierController::class, 'store'])->name('api.v1.suppliers.store');
+            Route::put('suppliers/{supplier}', [SupplierController::class, 'update'])->name('api.v1.suppliers.update');
+            Route::patch('suppliers/{supplier}', [SupplierController::class, 'update']);
+            Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('api.v1.suppliers.destroy');
         });
 
         // System Audit Logs endpoints (Administrator only)
