@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'login.throttle' => \App\Http\Middleware\LoginThrottle::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'analytics.token' => \App\Http\Middleware\AnalyticsServiceAuth::class,
         ]);
 
         // Stateful session cookie support for API routes

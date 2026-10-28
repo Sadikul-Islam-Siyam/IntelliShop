@@ -17,7 +17,7 @@ class DemoDataSeeder extends Seeder
 {
     private const START_DATE = '2026-04-25';
     private const DAYS = 180;
-    private const BRANCH_NAME = 'IntelliShop Demo Branch';
+    private const BRANCH_NAME = 'IntelliShop Central Branch';
 
     public function run(): void
     {
@@ -109,24 +109,24 @@ class DemoDataSeeder extends Seeder
      */
     private function seedProducts(array $suppliers): array
     {
-        $categoryId = $this->upsert('categories', ['name' => 'Demo Grocery'], [
-            'parent_category_id' => null, 'description' => 'Synthetic grocery products for demonstrations.',
+        $categoryId = $this->upsert('categories', ['name' => 'Grocery & Essentials'], [
+            'parent_category_id' => null, 'description' => 'Daily grocery and household products.',
             'created_at' => now(), 'updated_at' => now(),
         ]);
-        $brandId = $this->upsert('brands', ['name' => 'Demo Market'], [
-            'description' => 'Synthetic demo brand.', 'created_at' => now(), 'updated_at' => now(),
+        $brandId = $this->upsert('brands', ['name' => 'FreshValley'], [
+            'description' => 'Retail grocery brand.', 'created_at' => now(), 'updated_at' => now(),
         ]);
         $unitId = $this->upsert('units', ['name' => 'Each'], [
             'abbreviation' => 'ea', 'created_at' => now(), 'updated_at' => now(),
         ]);
 
         $definitions = [
-            'milk' => ['name' => 'Whole Milk 1L', 'sku' => 'DEMO-MILK-001', 'barcode' => '900000000001', 'cost' => 1.10, 'price' => 1.79, 'shelf' => 14, 'min' => 12, 'reorder' => 24, 'supplier' => 'northstar', 'pattern' => 'seasonal', 'expiry_days' => 8],
-            'rice' => ['name' => 'Long Grain Rice 1kg', 'sku' => 'DEMO-RICE-001', 'barcode' => '900000000002', 'cost' => 2.05, 'price' => 3.29, 'shelf' => null, 'min' => 10, 'reorder' => 20, 'supplier' => 'harvest', 'pattern' => 'trend', 'expiry_days' => 400],
-            'coffee' => ['name' => 'Ground Coffee 250g', 'sku' => 'DEMO-COFFEE-001', 'barcode' => '900000000003', 'cost' => 3.60, 'price' => 5.99, 'shelf' => 365, 'min' => 8, 'reorder' => 16, 'supplier' => 'northstar', 'pattern' => 'promotion', 'expiry_days' => 20],
-            'cereal' => ['name' => 'Honey Oat Cereal 500g', 'sku' => 'DEMO-CEREAL-001', 'barcode' => '900000000004', 'cost' => 2.25, 'price' => 3.89, 'shelf' => 240, 'min' => 8, 'reorder' => 18, 'supplier' => 'harvest', 'pattern' => 'anomaly', 'expiry_days' => 150],
-            'spice' => ['name' => 'Smoked Paprika 50g', 'sku' => 'DEMO-SPICE-001', 'barcode' => '900000000005', 'cost' => 1.30, 'price' => 2.49, 'shelf' => 540, 'min' => 5, 'reorder' => 10, 'supplier' => 'daily', 'pattern' => 'slow', 'expiry_days' => 300],
-            'dead' => ['name' => 'Seasonal Gift Tin', 'sku' => 'DEMO-DEAD-001', 'barcode' => '900000000006', 'cost' => 4.00, 'price' => 7.50, 'shelf' => null, 'min' => 3, 'reorder' => 6, 'supplier' => 'daily', 'pattern' => 'dead', 'expiry_days' => null],
+            'milk' => ['name' => 'Whole Milk 1L', 'sku' => 'MILK-1L-001', 'barcode' => '890103000101', 'cost' => 1.10, 'price' => 1.79, 'shelf' => 14, 'min' => 12, 'reorder' => 24, 'supplier' => 'northstar', 'pattern' => 'seasonal', 'expiry_days' => 8],
+            'rice' => ['name' => 'Long Grain Rice 1kg', 'sku' => 'RICE-1KG-002', 'barcode' => '890103000102', 'cost' => 2.05, 'price' => 3.29, 'shelf' => null, 'min' => 10, 'reorder' => 20, 'supplier' => 'harvest', 'pattern' => 'trend', 'expiry_days' => 400],
+            'coffee' => ['name' => 'Ground Coffee 250g', 'sku' => 'COFF-250G-003', 'barcode' => '890103000103', 'cost' => 3.60, 'price' => 5.99, 'shelf' => 365, 'min' => 8, 'reorder' => 16, 'supplier' => 'northstar', 'pattern' => 'promotion', 'expiry_days' => 20],
+            'cereal' => ['name' => 'Honey Oat Cereal 500g', 'sku' => 'CERL-500G-004', 'barcode' => '890103000104', 'cost' => 2.25, 'price' => 3.89, 'shelf' => 240, 'min' => 8, 'reorder' => 18, 'supplier' => 'harvest', 'pattern' => 'anomaly', 'expiry_days' => 150],
+            'spice' => ['name' => 'Smoked Paprika 50g', 'sku' => 'SPIC-50G-005', 'barcode' => '890103000105', 'cost' => 1.30, 'price' => 2.49, 'shelf' => 540, 'min' => 5, 'reorder' => 10, 'supplier' => 'daily', 'pattern' => 'slow', 'expiry_days' => 300],
+            'dead' => ['name' => 'Assorted Gift Tin', 'sku' => 'GIFT-TIN-006', 'barcode' => '890103000106', 'cost' => 4.00, 'price' => 7.50, 'shelf' => null, 'min' => 3, 'reorder' => 6, 'supplier' => 'daily', 'pattern' => 'dead', 'expiry_days' => null],
         ];
 
         $products = [];
@@ -211,7 +211,7 @@ class DemoDataSeeder extends Seeder
                 'created_at' => $spec['date'], 'updated_at' => $spec['date'],
             ]);
 
-            $batchNo = 'DEMO-' . $product['sku'] . '-' . $spec['suffix'];
+            $batchNo = 'BATCH-' . $product['sku'] . '-' . $spec['suffix'];
             $purchaseId = $this->upsert('purchases', ['batch_no' => $batchNo, 'product_id' => $product['id']], [
                 'purchase_order_id' => $purchaseOrderId, 'expiry_date' => $spec['expiry']->toDateString(),
                 'quantity_received' => $spec['quantity'], 'unit_cost' => $product['cost'],
@@ -249,7 +249,7 @@ class DemoDataSeeder extends Seeder
             }
 
             $customerId = $customers[$day % count($customers)];
-            $invoiceNo = sprintf('DEMO-%s-%s', $date->format('Ymd'), $product['sku']);
+            $invoiceNo = sprintf('INV-%s-%s', $date->format('Ymd'), $product['sku']);
             $subtotal = $grossSales[$day];
             $discount = $product['pattern'] === 'promotion' && $day % 30 < 4 ? round($subtotal * 0.10, 2) : 0.0;
             $saleId = $this->upsert('sales', ['invoice_no' => $invoiceNo], [
