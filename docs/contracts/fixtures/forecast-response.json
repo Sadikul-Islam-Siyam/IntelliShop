@@ -1,0 +1,1 @@
+{"forecast":[{"date":"2026-10-23","predicted_demand":20.5}],"model_used":"weekday_index","metrics":{"mae":2.1,"rmse":2.8,"smape":10.2},"beats_baseline":true}

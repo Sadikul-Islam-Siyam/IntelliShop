@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IntelliShop Analytics Service Contract v1",
+  "description": "Server-to-server JSON contracts. Browsers call Laravel only; Laravel calls analytics.",
+  "authentication": "Authorization: Bearer <ANALYTICS_SERVICE_TOKEN>",
+  "common": {
+    "error": {
+      "type": "object",
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {"type": "string"},
+            "message": {"type": "string"},
+            "details": {"type": "array", "items": {"type": "object", "properties": {"field": {"type": "string"}, "issue": {"type": "string"}}}}
+          }
+        }
+      }
+    }
+  },
+  "endpoints": {
+    "/health": {"method": "GET", "response": {"type": "object", "required": ["status"], "properties": {"status": {"const": "ok"}}}},
+    "/forecast": {"method": "POST", "request_required": ["product_id", "branch_id", "horizon", "history"], "response_required": ["forecast", "model_used", "metrics", "beats_baseline"], "response": {"type": "object", "properties": {"forecast": {"type": "array"}, "model_used": {"type": "string"}, "metrics": {"type": "object"}, "beats_baseline": {"type": "boolean"}}}},
+    "/projection": {"method": "POST", "request_required": ["available_stock", "forecasts", "lead_time_days", "review_period_days"], "response_required": ["projected_stock", "risk_level"], "response": {"type": "object", "properties": {"projected_stock": {"type": "array"}, "estimated_stockout_date": {"type": ["string", "null"]}, "risk_level": {"enum": ["low", "medium", "high", "critical"]}}}},
+    "/reorder": {"method": "POST", "request_required": ["forecast_demand", "demand_stddev", "service_level_z", "lead_time_days", "review_period_days", "stock", "on_order", "moq", "order_multiple", "capacity", "shelf_life_days"], "response_required": ["safety_stock", "reorder_point", "target_stock", "raw_quantity", "final_quantity", "constraints"], "response": {"type": "object", "properties": {"safety_stock": {"type": "number"}, "reorder_point": {"type": "number"}, "target_stock": {"type": "number"}, "raw_quantity": {"type": "number"}, "final_quantity": {"type": "integer"}, "constraints": {"type": "array", "items": {"type": "string"}}}}},
+    "/suppliers/evaluate": {"method": "POST", "request_required": ["product_id", "branch_id", "required_quantity", "candidates"], "response_required": ["mode", "weights", "eligible", "ranking"], "response": {"type": "object", "properties": {"mode": {"type": "string"}, "weights": {"type": "object"}, "eligible": {"type": "array"}, "ranking": {"type": "array"}}}},
+    "/overstock/run": {"method": "POST", "request_required": ["product_id", "branch_id"], "response": {"type": "object"}},
+    "/markdown/run": {"method": "POST", "request_required": ["product_id", "branch_id"], "response": {"type": "object"}},
+    "/phantom/run": {"method": "POST", "request_required": ["product_id", "branch_id"], "response": {"type": "object"}},
+    "/anomaly/run": {"method": "POST", "request_required": ["product_id", "branch_id"], "response": {"type": "object"}},
+    "/basket/run": {"method": "POST", "request_required": ["transactions"], "response": {"type": "object"}},
+    "/nlq/resolve": {"method": "POST", "request_required": ["query"], "response_required": ["intent", "filters", "confidence"], "response": {"type": "object", "properties": {"intent": {"type": "string"}, "filters": {"type": "object"}, "confidence": {"type": "number", "minimum": 0, "maximum": 1}}}}
+  }
+}
