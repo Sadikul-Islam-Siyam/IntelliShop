@@ -148,7 +148,7 @@ class ForecastController extends Controller
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'branch_id' => ['required', 'integer', 'exists:branches,id'],
             'horizon' => ['nullable', 'integer', 'min:1', 'max:60'],
-            'preferred_model' => ['nullable', 'string', 'in:auto,naive,seasonal_naive,sma,wma'],
+            'preferred_model' => ['nullable', 'string', 'in:auto,naive,seasonal_naive,sma,wma,weekday_index,holt_winters,croston_sba,croston,linear_trend'],
         ]);
 
         $preferred = ($validated['preferred_model'] ?? 'auto') === 'auto'
