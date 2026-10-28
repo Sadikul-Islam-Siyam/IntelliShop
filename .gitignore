@@ -1,33 +1,12 @@
-# Environment files
 .env
 .env.*
 !.env.example
 
-# Dependencies
 /vendor/
 /node_modules/
 
-# Laravel generated files
-/public/build/
-/public/hot
-/storage/*.key
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/storage/logs/*
-
-# IDEs and editors
 .idea/
 .vscode/
 
-# Operating system
 .DS_Store
 Thumbs.db
-
-# Testing and coverage
-.phpunit.cache/
-.phpunit.result.cache
-coverage/
-__pycache__/
-*.py[cod]
-.pytest_cache/

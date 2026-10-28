@@ -1,1 +1,0 @@
-"""IntelliShop Statistical Analytics Service."""
