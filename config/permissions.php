@@ -452,6 +452,7 @@ return [
             'modules' => [
                 ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
                 ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
+                ['name' => 'Demand Forecasting', 'description' => 'Statistical demand forecasting pipeline, backtest metrics, and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],
                 ['name' => 'System Audit Logs', 'description' => 'Inspect immutable event and security audit trails.', 'route' => '/audit-logs', 'icon' => 'audit'],
                 ['name' => 'System Settings', 'description' => 'Configure algorithms, thresholds, and business rules.', 'route' => '/settings', 'icon' => 'settings'],
             ],
@@ -464,6 +465,7 @@ return [
             'modules' => [
                 ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
                 ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
+                ['name' => 'Demand Forecasting', 'description' => 'Statistical demand forecasting pipeline, backtest metrics, and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],
                 ['name' => 'System Audit Logs', 'description' => 'Inspect immutable event and security audit trails.', 'route' => '/audit-logs', 'icon' => 'audit'],
                 ['name' => 'System Settings', 'description' => 'Configure algorithms, thresholds, and business rules.', 'route' => '/settings', 'icon' => 'settings'],
             ],
@@ -475,6 +477,7 @@ return [
             'description' => 'Branch-scoped oversight of daily sales, local inventory, staff performance, and stock transfers.',
             'modules' => [
                 ['name' => 'Branch Inventory', 'description' => 'Monitor local product balances and safety stocks.', 'route' => '/inventory', 'icon' => 'inventory'],
+                ['name' => 'Demand Forecasting', 'description' => 'Inspect statistical product-branch demand forecasts and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],
                 ['name' => 'Stock Transfers', 'description' => 'Review and approve stock transfer requests.', 'route' => '/stock-transfers', 'icon' => 'transfers'],
                 ['name' => 'Daily Sales', 'description' => 'Track checkout transactions and cashflow metrics.', 'route' => '/sales', 'icon' => 'sales'],
                 ['name' => 'Staff Overview', 'description' => 'Manage on-duty branch employees and cashiers.', 'route' => '/staff', 'icon' => 'staff'],
@@ -534,7 +537,7 @@ return [
             'badge' => 'AI & Decision Support',
             'description' => 'Predictive demand forecasting, sales anomaly detection, market basket affinity, and natural-language queries.',
             'modules' => [
-                ['name' => 'Demand Forecasting', 'description' => 'Inspect baseline and ML sales forecast projections.', 'route' => '/forecasting', 'icon' => 'forecast'],
+                ['name' => 'Demand Forecasting', 'description' => 'Inspect statistical equation sales forecast projections and backtests.', 'route' => '/forecasting', 'icon' => 'forecast'],
                 ['name' => 'Anomaly Detection', 'description' => 'Review outlier sales and unusual spikes in demand.', 'route' => '/anomalies', 'icon' => 'anomaly'],
                 ['name' => 'Market Basket Affinity', 'description' => 'Analyze item association rules and cross-sell pairs.', 'route' => '/market-basket', 'icon' => 'affinity'],
                 ['name' => 'Natural Language Query', 'description' => 'Execute natural language business queries.', 'route' => '/nlq', 'icon' => 'nlq'],

@@ -2,9 +2,10 @@
 
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\BranchController;
-use App\Http\Controllers\Web\SupplierController;
-use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\CustomerController;
+use App\Http\Controllers\Web\ForecastController;
+use App\Http\Controllers\Web\SettingsController;
+use App\Http\Controllers\Web\SupplierController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -76,4 +77,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/audit-logs', [\App\Http\Controllers\Web\AuditLogController::class, 'index'])
         ->middleware('role:admin,super-admin')
         ->name('audit-logs.index');
+
+    // Demand Forecasting workspace
+    Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+        Route::get('/forecasting', [ForecastController::class, 'index'])->name('forecasts.index');
+        Route::get('/forecasts', [ForecastController::class, 'index'])->name('forecasts.list');
+    });
 });

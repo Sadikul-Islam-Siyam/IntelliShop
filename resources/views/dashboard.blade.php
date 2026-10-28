@@ -68,6 +68,49 @@
                 </div>
             </div>
         @endif
+
+        @if(!empty($upcomingDemand))
+            <div class="card">
+                <div class="workspace-header" style="margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">
+                            Upcoming Demand Requirements
+                        </h3>
+                        <p class="welcome-subtitle" style="margin-top: 0.2rem; font-size: 0.875rem;">
+                            Required product quantities (in units) for the upcoming days.
+                        </p>
+                    </div>
+                    <a href="{{ route('forecasts.index') }}" class="workspace-badge" style="text-decoration: none;">
+                        View Daily Breakdown &rarr;
+                    </a>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border); background: #f8fafc; text-align: left;">
+                                <th style="padding: 0.75rem 0.9rem; font-size: 0.76rem; text-transform: uppercase; color: var(--text-secondary);">Product</th>
+                                <th style="padding: 0.75rem 0.9rem; font-size: 0.76rem; text-transform: uppercase; color: var(--text-secondary);">SKU</th>
+                                <th style="padding: 0.75rem 0.9rem; font-size: 0.76rem; text-transform: uppercase; color: var(--text-secondary);">Tomorrow</th>
+                                <th style="padding: 0.75rem 0.9rem; font-size: 0.76rem; text-transform: uppercase; color: var(--text-secondary);">Next 7 Days</th>
+                                <th style="padding: 0.75rem 0.9rem; font-size: 0.76rem; text-transform: uppercase; color: var(--text-secondary);">Next {{ $upcomingDemand[0]['horizon_days'] ?? 14 }} Days Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($upcomingDemand as $item)
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 0.75rem 0.9rem; font-weight: 700; color: var(--text-primary);">{{ $item['product_name'] }}</td>
+                                    <td style="padding: 0.75rem 0.9rem; color: var(--text-secondary);">{{ $item['sku'] }}</td>
+                                    <td style="padding: 0.75rem 0.9rem; font-weight: 600;">{{ $item['next_day_units'] }} units</td>
+                                    <td style="padding: 0.75rem 0.9rem; font-weight: 700; color: var(--accent);">{{ $item['next_7_days_units'] }} units</td>
+                                    <td style="padding: 0.75rem 0.9rem; font-weight: 800; color: var(--success);">{{ $item['total_horizon_units'] }} units</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     </main>
     <footer class="dashboard-footer">
         <div class="footer-container">

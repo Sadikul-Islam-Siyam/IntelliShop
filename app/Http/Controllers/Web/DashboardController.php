@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
+use App\Models\Branch;
+use App\Models\Product;
+use App\Services\Analytics\DemandForecastService;
+use Database\Seeders\DemoDataSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -12,6 +15,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly DemandForecastService $forecastService,
+    ) {}
+
     /**
      * Redirect authenticated user to their role-specific landing dashboard.
      */
@@ -19,7 +26,6 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // Check if user has an assigned role with a dedicated redirect route
         if ($user && $user->role) {
             $map = config('permissions.role_redirect_map', []);
             $roleName = $user->role->name;
@@ -29,7 +35,6 @@ class DashboardController extends Controller
             }
         }
 
-        // Fallback: render default dashboard view
         return view('dashboard', [
             'user' => $user,
             'roleConfig' => null,
@@ -45,16 +50,29 @@ class DashboardController extends Controller
         $normalizedSlug = Str::kebab(str_replace('_', '-', $role));
         $dashboards = config('permissions.role_dashboards', []);
 
-        // Validate that requested dashboard slug exists
         if (!isset($dashboards[$normalizedSlug])) {
             abort(Response::HTTP_NOT_FOUND, 'Dashboard not found.');
         }
 
         $roleConfig = $dashboards[$normalizedSlug];
 
-        // Verify that user possesses the required role for this dashboard
         if (!$user->hasRole($roleConfig['role_name']) && !$user->hasRole($normalizedSlug)) {
             abort(Response::HTTP_FORBIDDEN, 'Access denied. You do not have permission to access this dashboard.');
+        }
+
+        $upcomingDemand = [];
+        $canViewForecast = $user->isSuperAdmin()
+            || $user->hasPermission('ml.forecast.view')
+            || $user->hasRole(['admin', 'super-admin', 'branch-manager', 'inventory-manager', 'purchase-manager', 'system-analyst']);
+
+        if ($canViewForecast) {
+            if (Product::query()->count() === 0 || Branch::query()->count() === 0) {
+                app(DemoDataSeeder::class)->run();
+            }
+            $branchId = (int) ($user->branch_id ?: (Branch::query()->where('status', 'active')->value('id') ?? 1));
+            if ($branchId > 0 && Branch::whereKey($branchId)->exists()) {
+                $upcomingDemand = $this->forecastService->ensureBranchForecasts($branchId);
+            }
         }
 
         return view('dashboard', [
@@ -62,6 +80,7 @@ class DashboardController extends Controller
             'roleConfig' => $roleConfig,
             'roleSlug' => $normalizedSlug,
             'permissions' => $user->getPermissions(),
+            'upcomingDemand' => $upcomingDemand,
         ]);
     }
 }

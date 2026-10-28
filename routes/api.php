@@ -3,9 +3,10 @@
 use App\Http\Controllers\Api\V1\AnalyticsExportController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
-use App\Http\Controllers\Api\V1\SupplierController;
-use App\Http\Controllers\Api\V1\SettingsController;
 use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\ForecastController;
+use App\Http\Controllers\Api\V1\SettingsController;
+use App\Http\Controllers\Api\V1\SupplierController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -80,6 +81,15 @@ Route::prefix('v1')->group(function () {
         Route::get('audit-logs/{id}', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'show'])
             ->middleware('role:admin,super-admin')
             ->name('api.v1.audit-logs.show');
+
+        // Demand Forecasting endpoints
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+            Route::get('forecasts', [ForecastController::class, 'index'])->name('api.v1.forecasts.index');
+        });
+        Route::middleware('role:admin,super-admin,system-analyst,purchase-manager,branch-manager')->group(function () {
+            Route::post('forecasts/run', [ForecastController::class, 'run'])->name('api.v1.forecasts.run');
+            Route::post('forecasts/run-all', [ForecastController::class, 'runAll'])->name('api.v1.forecasts.run-all');
+        });
     });
 
     // Analytics Data Extraction API
