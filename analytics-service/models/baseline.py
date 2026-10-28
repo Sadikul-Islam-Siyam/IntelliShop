@@ -136,10 +136,29 @@ def one_step_predictions_for_model(values: Sequence[float], model_name: str, win
     Generates walk-forward one-step-ahead predictions fitted strictly on observations
     prior to step t to compute demand variability sigma_d.
     """
+    from models.croston import fit_croston_sba, forecast_croston_sba
+    from models.holt_winters import fit_holt_winters, forecast_holt_winters
+    from models.linear_trend import forecast_linear_trend
+    from models.weekday_index import forecast_weekday_index
+
     n = len(values)
-    start_idx = 7 if model_name == "seasonal_naive" and n > 7 else max(1, min(window, n - 1))
+    start_idx = 7 if model_name in ("seasonal_naive", "weekday_index", "holt_winters") and n > 7 else max(1, min(window, n - 1))
     actuals: List[float] = []
     preds: List[float] = []
+
+    hw_params: Optional[Dict[str, float]] = None
+    if model_name == "holt_winters" and n > start_idx:
+        fitted_hw = fit_holt_winters(values[:start_idx], season_length=7)
+        hw_params = {
+            "alpha": float(fitted_hw["alpha"]),
+            "beta": float(fitted_hw["beta"]),
+            "gamma": float(fitted_hw["gamma"]),
+        }
+
+    croston_alpha: Optional[float] = None
+    if model_name in ("croston_sba", "croston") and n > start_idx:
+        fitted_cr = fit_croston_sba(values[:start_idx], method="sba")
+        croston_alpha = float(fitted_cr["alpha"])
 
     for t in range(start_idx, n):
         history_up_to_t = values[:t]
@@ -151,6 +170,21 @@ def one_step_predictions_for_model(values: Sequence[float], model_name: str, win
             pred = forecast_sma(history_up_to_t, 1, window=window)[0]
         elif model_name == "wma":
             pred = forecast_wma(history_up_to_t, 1, window=window)[0]
+        elif model_name == "weekday_index":
+            pred = forecast_weekday_index(history_up_to_t, 1, season_length=7)[0]
+        elif model_name == "holt_winters":
+            pred = forecast_holt_winters(
+                history_up_to_t,
+                1,
+                season_length=7,
+                alpha=hw_params["alpha"] if hw_params else None,
+                beta=hw_params["beta"] if hw_params else None,
+                gamma=hw_params["gamma"] if hw_params else None,
+            )[0]
+        elif model_name in ("croston_sba", "croston"):
+            pred = forecast_croston_sba(history_up_to_t, 1, alpha=croston_alpha, method="sba")[0]
+        elif model_name == "linear_trend":
+            pred = forecast_linear_trend(history_up_to_t, 1)[0]
         else:
             pred = forecast_naive(history_up_to_t, 1)[0]
 
@@ -251,10 +285,27 @@ def generate_product_branch_forecast(
     features = build_feature_set(cleaned, validation_days=min(14, max(7, len(cleaned) // 4)))
     enriched_series = features["series"]
 
+    from models.croston import forecast_croston_sba
+    from models.holt_winters import forecast_holt_winters
+    from models.linear_trend import forecast_linear_trend
+    from models.weekday_index import forecast_weekday_index
+
     effective_values = [float(r["effective_quantity"]) for r in enriched_series]
     eval_result = evaluate_baseline_candidates(effective_values, validation_days=14, window=7)
 
-    model_used = preferred_model if preferred_model in ("naive", "seasonal_naive", "sma", "wma") else eval_result["selected_model"]
+    supported_models = (
+        "naive",
+        "seasonal_naive",
+        "sma",
+        "wma",
+        "weekday_index",
+        "holt_winters",
+        "croston_sba",
+        "croston",
+        "linear_trend",
+    )
+    normalized_preferred = "croston_sba" if preferred_model == "croston" else preferred_model
+    model_used = normalized_preferred if normalized_preferred in supported_models else eval_result["selected_model"]
 
     if model_used == "naive":
         horizon_preds = forecast_naive(effective_values, horizon)
@@ -264,6 +315,14 @@ def generate_product_branch_forecast(
         horizon_preds = forecast_sma(effective_values, horizon, window=7)
     elif model_used == "wma":
         horizon_preds = forecast_wma(effective_values, horizon, window=7)
+    elif model_used == "weekday_index":
+        horizon_preds = forecast_weekday_index(effective_values, horizon, season_length=7)
+    elif model_used == "holt_winters":
+        horizon_preds = forecast_holt_winters(effective_values, horizon, season_length=7)
+    elif model_used in ("croston_sba", "croston"):
+        horizon_preds = forecast_croston_sba(effective_values, horizon, method="sba")
+    elif model_used == "linear_trend":
+        horizon_preds = forecast_linear_trend(effective_values, horizon)
     else:
         horizon_preds = forecast_seasonal_naive(effective_values, horizon, season_length=7)
 
