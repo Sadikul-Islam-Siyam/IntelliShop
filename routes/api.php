@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AnalyticsExportController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\SupplierController;
@@ -80,6 +81,22 @@ Route::prefix('v1')->group(function () {
             ->middleware('role:admin,super-admin')
             ->name('api.v1.audit-logs.show');
     });
+
+    // Analytics Data Extraction API
+    Route::prefix('analytics/export')->middleware('analytics.token')->group(function () {
+        Route::get('sales', [AnalyticsExportController::class, 'sales'])->name('api.v1.analytics.export.sales');
+        Route::get('inventory', [AnalyticsExportController::class, 'inventory'])->name('api.v1.analytics.export.inventory');
+        Route::get('batches', [AnalyticsExportController::class, 'batches'])->name('api.v1.analytics.export.batches');
+        Route::get('purchases', [AnalyticsExportController::class, 'purchases'])->name('api.v1.analytics.export.purchases');
+    });
+});
+
+// Root /api/analytics/export/* aliases
+Route::prefix('analytics/export')->middleware('analytics.token')->group(function () {
+    Route::get('sales', [AnalyticsExportController::class, 'sales']);
+    Route::get('inventory', [AnalyticsExportController::class, 'inventory']);
+    Route::get('batches', [AnalyticsExportController::class, 'batches']);
+    Route::get('purchases', [AnalyticsExportController::class, 'purchases']);
 });
 
 // Root API aliases for convenience
