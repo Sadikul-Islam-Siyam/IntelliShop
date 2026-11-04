@@ -31,6 +31,15 @@ def register_post_handler(
 FORECAST_ENDPOINTS = ("/forecast", "/forecast/select")
 
 
+def _register_projection_handler() -> None:
+    """Registers the stock projection handler when available."""
+    try:
+        from analytics.stock_projection import handle_projection_request  # type: ignore
+        register_post_handler("/projection", handle_projection_request)
+    except ImportError:
+        pass
+
+
 def _register_forecast_handlers() -> None:
     """Registers the forecasting handlers when the model package is available."""
     try:
@@ -103,6 +112,9 @@ def dispatch_request(
 
         if parsed_path in FORECAST_ENDPOINTS and parsed_path not in _POST_HANDLERS:
             _register_forecast_handlers()
+
+        if parsed_path == "/projection" and parsed_path not in _POST_HANDLERS:
+            _register_projection_handler()
 
         if parsed_path in _POST_HANDLERS:
             return _POST_HANDLERS[parsed_path](payload)
