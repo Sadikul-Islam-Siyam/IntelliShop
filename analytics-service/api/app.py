@@ -35,10 +35,19 @@ def _register_forecast_handlers() -> None:
     """Registers the forecasting handlers when the model package is available."""
     try:
         from models.backtest import handle_forecast_request, handle_select_request  # type: ignore
-    except ImportError:
+        register_post_handler("/forecast", handle_forecast_request)
+        register_post_handler("/forecast/select", handle_select_request)
         return
-    register_post_handler("/forecast", handle_forecast_request)
-    register_post_handler("/forecast/select", handle_select_request)
+    except ImportError:
+        pass
+
+    try:
+        from models.mean_median import handle_forecast_request  # type: ignore
+        register_post_handler("/forecast", handle_forecast_request)
+        register_post_handler("/forecast/select", handle_forecast_request)
+        return
+    except ImportError:
+        pass
 
 
 def make_validation_error(field: str, issue: str) -> Tuple[int, Dict[str, Any]]:
