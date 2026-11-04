@@ -80,9 +80,14 @@
                             Required product quantities (in units) for the upcoming days.
                         </p>
                     </div>
-                    <a href="{{ route('forecasts.index') }}" class="workspace-badge" style="text-decoration: none;">
-                        View Daily Breakdown &rarr;
-                    </a>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="{{ route('stock-risk.index') }}" class="workspace-badge" style="text-decoration: none; background: #fee2e2; color: #b91c1c; font-weight: 700;">
+                            Stock-Out Risk &rarr;
+                        </a>
+                        <a href="{{ route('forecasts.index') }}" class="workspace-badge" style="text-decoration: none;">
+                            View Demand Forecasts &rarr;
+                        </a>
+                    </div>
                 </div>
 
                 <div style="overflow-x: auto;">

@@ -453,6 +453,7 @@ return [
                 ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
                 ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
                 ['name' => 'Demand Forecasting', 'description' => 'Statistical demand forecasting pipeline, backtest metrics, and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],
+                ['name' => 'Stock-Out Risk', 'description' => 'Timeline days-of-cover projections and supplier risk classifications.', 'route' => '/stock-risk', 'icon' => 'risk'],
                 ['name' => 'System Audit Logs', 'description' => 'Inspect immutable event and security audit trails.', 'route' => '/audit-logs', 'icon' => 'audit'],
                 ['name' => 'System Settings', 'description' => 'Configure algorithms, thresholds, and business rules.', 'route' => '/settings', 'icon' => 'settings'],
             ],
@@ -466,6 +467,7 @@ return [
                 ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
                 ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
                 ['name' => 'Demand Forecasting', 'description' => 'Statistical demand forecasting pipeline, backtest metrics, and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],
+                ['name' => 'Stock-Out Risk', 'description' => 'Timeline days-of-cover projections and supplier risk classifications.', 'route' => '/stock-risk', 'icon' => 'risk'],
                 ['name' => 'System Audit Logs', 'description' => 'Inspect immutable event and security audit trails.', 'route' => '/audit-logs', 'icon' => 'audit'],
                 ['name' => 'System Settings', 'description' => 'Configure algorithms, thresholds, and business rules.', 'route' => '/settings', 'icon' => 'settings'],
             ],
@@ -491,6 +493,7 @@ return [
             'modules' => [
                 ['name' => 'Product Catalog', 'description' => 'Manage categories, brands, SKUs, and retail pricing.', 'route' => '/products', 'icon' => 'products'],
                 ['name' => 'Stock Balances', 'description' => 'Perform stock adjustments and batch tracking.', 'route' => '/inventory', 'icon' => 'stock'],
+                ['name' => 'Stock-Out Risk', 'description' => 'Timeline days-of-cover projections and supplier risk classifications.', 'route' => '/stock-risk', 'icon' => 'risk'],
                 ['name' => 'Stock-Out Alerts', 'description' => 'Inspect low-stock warnings and reorder triggers.', 'route' => '/alerts', 'icon' => 'alerts'],
                 ['name' => 'Goods Receiving', 'description' => 'Receive supplier purchase orders into inventory.', 'route' => '/receiving', 'icon' => 'receiving'],
             ],
@@ -538,6 +541,7 @@ return [
             'description' => 'Predictive demand forecasting, sales anomaly detection, market basket affinity, and natural-language queries.',
             'modules' => [
                 ['name' => 'Demand Forecasting', 'description' => 'Inspect statistical equation sales forecast projections and backtests.', 'route' => '/forecasting', 'icon' => 'forecast'],
+                ['name' => 'Stock-Out Risk', 'description' => 'Timeline days-of-cover projections and supplier risk classifications.', 'route' => '/stock-risk', 'icon' => 'risk'],
                 ['name' => 'Anomaly Detection', 'description' => 'Review outlier sales and unusual spikes in demand.', 'route' => '/anomalies', 'icon' => 'anomaly'],
                 ['name' => 'Market Basket Affinity', 'description' => 'Analyze item association rules and cross-sell pairs.', 'route' => '/market-basket', 'icon' => 'affinity'],
                 ['name' => 'Natural Language Query', 'description' => 'Execute natural language business queries.', 'route' => '/nlq', 'icon' => 'nlq'],
