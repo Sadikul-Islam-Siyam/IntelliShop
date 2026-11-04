@@ -51,13 +51,13 @@ class DemandForecastService
             'preferred_model' => $preferredModel,
         ]);
 
-        $metrics = $response['metrics'] ?? ['mae' => 0.0, 'rmse' => 0.0, 'smape' => 0.0, 'mape' => 0.0];
-        $modelUsed = (string) ($response['model_used'] ?? 'seasonal_naive');
-        $baselineModel = (string) ($response['baseline_model'] ?? 'seasonal_naive');
-        $baselineSmape = (float) ($response['baseline_smape'] ?? ($metrics['smape'] ?? 0.0));
+        $metrics = $response['metrics'] ?? ['sse' => 0.0, 'rse' => 0.0, 'r_squared' => null];
+        $modelUsed = (string) ($response['model_used'] ?? 'mean');
+        $baselineModel = (string) ($response['baseline_model'] ?? 'mean');
+        $baselineSse = (float) ($response['baseline_sse'] ?? ($metrics['sse'] ?? 0.0));
         $beatsBaseline = (bool) ($response['beats_baseline'] ?? false);
-        $confidenceScore = (float) ($response['confidence_score'] ?? max(5.0, 100.0 - min(95.0, ((float) ($metrics['smape'] ?? 0.0)) / 2.0)));
-        $sigmaD = (float) ($response['sigma_d'] ?? ($metrics['rmse'] ?? 0.0));
+        $confidenceScore = (float) ($response['confidence_score'] ?? 85.0);
+        $sigmaD = (float) ($response['sigma_d'] ?? ($metrics['rse'] ?? 0.0));
         $trainEndDate = $response['train_end_date'] ?? ($history !== [] ? end($history)['date'] : now()->toDateString());
         $folds = (int) ($response['folds'] ?? 1);
         $candidates = $response['candidates'] ?? [];
@@ -72,7 +72,7 @@ class DemandForecastService
             $metrics,
             $modelUsed,
             $baselineModel,
-            $baselineSmape,
+            $baselineSse,
             $beatsBaseline,
             $confidenceScore,
             $sigmaD,
@@ -92,6 +92,10 @@ class DemandForecastService
             if (is_array($candidates) && count($candidates) > 0) {
                 foreach ($candidates as $cand) {
                     $isSelected = (string) ($cand['model'] ?? '') === $modelUsed;
+                    $candSse = isset($cand['sse']) ? (float) $cand['sse'] : (float) ($metrics['sse'] ?? 0.0);
+                    $candRse = isset($cand['rse']) ? (float) $cand['rse'] : (float) ($metrics['rse'] ?? 0.0);
+                    $candRSq = isset($cand['r_squared']) ? (float) $cand['r_squared'] : null;
+
                     $run = ModelRun::create([
                         'product_id' => $productId,
                         'branch_id' => $branchId,
@@ -99,11 +103,15 @@ class DemandForecastService
                         'trained_at' => now(),
                         'train_end_date' => $trainEndDate,
                         'folds' => $folds,
-                        'mae' => (float) ($cand['mae'] ?? $metrics['mae'] ?? 0.0),
-                        'rmse' => (float) ($cand['rmse'] ?? $metrics['rmse'] ?? 0.0),
-                        'smape' => (float) ($cand['smape'] ?? $metrics['smape'] ?? 0.0),
+                        'sse' => $candSse,
+                        'rse' => $candRse,
+                        'r_squared' => $candRSq,
+                        'mae' => 0.0,
+                        'rmse' => $candRse,
+                        'smape' => 0.0,
                         'baseline_model' => $baselineModel,
-                        'baseline_smape' => $baselineSmape,
+                        'baseline_sse' => $baselineSse,
+                        'baseline_smape' => 0.0,
                         'beats_baseline' => (bool) ($cand['beats_baseline'] ?? false),
                         'selected' => $isSelected,
                         'params' => array_merge(
@@ -111,7 +119,6 @@ class DemandForecastService
                             [
                                 'sigma_d' => $sigmaD,
                                 'service_level_z' => $zValue,
-                                'mape' => (float) ($cand['mape'] ?? $metrics['mape'] ?? 0.0),
                                 'horizon' => $horizon,
                             ]
                         ),
@@ -130,11 +137,15 @@ class DemandForecastService
                     'trained_at' => now(),
                     'train_end_date' => $trainEndDate,
                     'folds' => $folds,
-                    'mae' => (float) ($metrics['mae'] ?? 0.0),
-                    'rmse' => (float) ($metrics['rmse'] ?? 0.0),
-                    'smape' => (float) ($metrics['smape'] ?? 0.0),
+                    'sse' => (float) ($metrics['sse'] ?? 0.0),
+                    'rse' => isset($metrics['rse']) ? (float) $metrics['rse'] : null,
+                    'r_squared' => isset($metrics['r_squared']) ? (float) $metrics['r_squared'] : null,
+                    'mae' => 0.0,
+                    'rmse' => (float) ($metrics['rse'] ?? 0.0),
+                    'smape' => 0.0,
                     'baseline_model' => $baselineModel,
-                    'baseline_smape' => $baselineSmape,
+                    'baseline_sse' => $baselineSse,
+                    'baseline_smape' => 0.0,
                     'beats_baseline' => $beatsBaseline,
                     'selected' => true,
                     'params' => array_merge(
@@ -142,7 +153,6 @@ class DemandForecastService
                         [
                             'sigma_d' => $sigmaD,
                             'service_level_z' => $zValue,
-                            'mape' => (float) ($metrics['mape'] ?? 0.0),
                             'horizon' => $horizon,
                         ]
                     ),
@@ -201,10 +211,11 @@ class DemandForecastService
                 'horizon' => $horizon,
                 'metrics' => $metrics,
                 'baseline_model' => $baselineModel,
-                'baseline_smape' => $baselineSmape,
+                'baseline_sse' => $baselineSse,
+                'baseline_smape' => 0.0,
                 'beats_baseline' => $beatsBaseline,
                 'candidates' => $candidates,
-                'weekday_indices' => $response['weekday_indices'] ?? [],
+                'weekday_means' => $response['weekday_means'] ?? [],
                 'pipeline_summary' => $response['pipeline_summary'] ?? [],
                 'history' => array_slice($history, -42), // recent 6 weeks for charting
                 'forecasts' => $storedForecasts,

@@ -12,7 +12,7 @@ class SettingsSeeder extends Seeder
     {
         $defaults = [
             ['forecast', 'forecast_horizon_days', '14', 'int', 'Default forecast and replenishment horizon in days.'],
-            ['forecast', 'forecast_metric_primary', 'smape', 'string', 'Primary forecast comparison metric.'],
+            ['forecast', 'forecast_metric_primary', 'sse', 'string', 'Primary forecast comparison metric (course formula: SSE).'],
             ['replenishment', 'replenishment_service_level', '0.95', 'decimal', 'Target service level used to select the z value.'],
             ['replenishment', 'replenishment_review_period_days', '7', 'int', 'Replenishment review period in days.'],
             ['replenishment', 'replenishment_safety_stock_formula', 'z*sigma_d*sqrt(L)', 'string', 'Safety stock formula; sigma_d is daily demand deviation and L is lead time.'],
