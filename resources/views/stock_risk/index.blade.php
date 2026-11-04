@@ -6,11 +6,18 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Stock-Out Risk Classification — IntelliShop</title>
 
+    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('images/favicon-192x192.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/favicon-192x192.png') }}">
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="{{ asset('css/stock-risk.css') }}">
 </head>
 <body>
@@ -24,9 +31,9 @@
             </a>
             <div class="nav-actions">
                 <span class="nav-user-info">
-                    <strong>{{ $user->name ?? 'Analyst' }}</strong> ({{ $user->role->name ?? 'System Analyst' }})
+                    <strong>{{ $user->name ?? 'User' }}</strong> ({{ $user->role->name ?? 'User' }})
                 </span>
-                <a href="/forecasting" class="btn-nav">Demand Forecasts</a>
+                <a href="{{ route('forecasts.index') }}" class="btn-nav">Demand Forecasts</a>
                 <a href="/dashboard" class="btn-nav">&larr; Dashboard</a>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
@@ -41,23 +48,11 @@
 
         <div class="page-header">
             <div>
-                <h1 class="page-title">Stock-Out Risk Classification</h1>
+                <h1 class="page-title">
+                    Stock-Out Risk Classification
+                    <span class="tag-badge">{{ $branch?->name ?? 'Main Branch' }}</span>
+                </h1>
                 <p class="page-subtitle">Continuous timeline projection identifying Expected Stock-Out Dates (ESD) & supplier replenishment exposure.</p>
-            </div>
-        </div>
-
-        <div class="kpi-row">
-            <div class="kpi-card high">
-                <div class="kpi-label">High Risk (ESD &le; Today + L)</div>
-                <div class="kpi-val">{{ $highCount }} items</div>
-            </div>
-            <div class="kpi-card medium">
-                <div class="kpi-label">Medium Risk (ESD &le; Today + L + R)</div>
-                <div class="kpi-val">{{ $mediumCount }} items</div>
-            </div>
-            <div class="kpi-card low">
-                <div class="kpi-label">Low Risk (Safe Buffer)</div>
-                <div class="kpi-val">{{ $lowCount }} items</div>
             </div>
         </div>
 
@@ -137,6 +132,17 @@
             </table>
         </div>
     </div>
+
+    <footer class="dashboard-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <strong>IntelliShop</strong> &mdash; Intelligent Super Shop Management &amp; Decision Support System.
+            </div>
+            <div class="footer-meta">
+                <span>&copy; {{ date('Y') }} IntelliShop. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
 
     <script>
         async function refreshAllAssessments() {
