@@ -39,9 +39,9 @@ class ForecastStorageApiTest extends TestCase
                     'confidence_score',
                     'sigma_d',
                     'horizon',
-                    'metrics' => ['mae', 'rmse', 'smape'],
+                    'metrics' => ['sse', 'rse'],
                     'baseline_model',
-                    'baseline_smape',
+                    'baseline_sse',
                     'beats_baseline',
                     'forecasts' => [
                         '*' => [
