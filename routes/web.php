@@ -83,4 +83,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/forecasting', [ForecastController::class, 'index'])->name('forecasts.index');
         Route::get('/forecasts', [ForecastController::class, 'index'])->name('forecasts.list');
     });
+
+    // Stock-Out Risk Classification workspace (#44)
+    Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+        Route::get('/stock-risk', [\App\Http\Controllers\Web\StockRiskController::class, 'index'])->name('stock-risk.index');
+    });
 });
