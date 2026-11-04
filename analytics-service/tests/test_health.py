@@ -42,6 +42,17 @@ class TestAnalyticsServiceHealth(unittest.TestCase):
         self.assertEqual(status_ok, 200)
         self.assertEqual(body_ok["status"], "ok")
 
+    def test_forecast_endpoints_validate_required_fields(self) -> None:
+        for endpoint in ("/forecast", "/forecast/select"):
+            status, body = dispatch_request("POST", endpoint, body={"product_id": 1})
+            self.assertEqual(status, 422)
+            self.assertEqual(body["error"]["code"], "VALIDATION_FAILED")
+
+    def test_unknown_endpoint_returns_not_found(self) -> None:
+        status, body = dispatch_request("GET", "/unknown")
+        self.assertEqual(status, 404)
+        self.assertEqual(body["error"]["code"], "NOT_FOUND")
+
     def test_http_server_health_integration(self) -> None:
         server = HTTPServer(("127.0.0.1", 0), AnalyticsRequestHandler)
         port = server.server_address[1]
