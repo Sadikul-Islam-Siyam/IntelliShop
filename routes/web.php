@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
     // Demand Forecasting workspace
     Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
         Route::get('/forecasting', [ForecastController::class, 'index'])->name('forecasts.index');
+        Route::get('/forecasting/hub', [ForecastController::class, 'index'])->name('forecasting.index');
         Route::get('/forecasts', [ForecastController::class, 'index'])->name('forecasts.list');
     });
 
