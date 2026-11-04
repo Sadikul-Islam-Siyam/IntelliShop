@@ -28,6 +28,19 @@ def register_post_handler(
     _POST_HANDLERS[path] = handler
 
 
+FORECAST_ENDPOINTS = ("/forecast", "/forecast/select")
+
+
+def _register_forecast_handlers() -> None:
+    """Registers the forecasting handlers when the model package is available."""
+    try:
+        from models.backtest import handle_forecast_request, handle_select_request  # type: ignore
+    except ImportError:
+        return
+    register_post_handler("/forecast", handle_forecast_request)
+    register_post_handler("/forecast/select", handle_select_request)
+
+
 def make_validation_error(field: str, issue: str) -> Tuple[int, Dict[str, Any]]:
     return 422, {
         "error": {
@@ -79,27 +92,21 @@ def dispatch_request(
     if method.upper() == "POST":
         payload = body if isinstance(body, dict) else {}
 
-        if parsed_path in ("/forecast", "/forecast/select") and parsed_path not in _POST_HANDLERS:
-            try:
-                from models.baseline import handle_forecast_request  # type: ignore
-
-                register_post_handler("/forecast", handle_forecast_request)
-                register_post_handler("/forecast/select", handle_forecast_request)
-            except ImportError:
-                pass
+        if parsed_path in FORECAST_ENDPOINTS and parsed_path not in _POST_HANDLERS:
+            _register_forecast_handlers()
 
         if parsed_path in _POST_HANDLERS:
             return _POST_HANDLERS[parsed_path](payload)
 
-        if parsed_path in ("/forecast", "/forecast/select"):
+        if parsed_path in FORECAST_ENDPOINTS:
             for req_field in ("product_id", "branch_id", "horizon", "history"):
                 if req_field not in payload:
                     return make_validation_error(req_field, f"The {req_field} field is required.")
-            return 200, {
-                "forecast": [],
-                "model_used": "naive",
-                "metrics": {"mae": 0.0, "rmse": 0.0, "smape": 0.0},
-                "beats_baseline": False,
+            return 503, {
+                "error": {
+                    "code": "MODEL_UNAVAILABLE",
+                    "message": "Forecasting models are not installed in this analytics service build.",
+                }
             }
 
     return 404, {
