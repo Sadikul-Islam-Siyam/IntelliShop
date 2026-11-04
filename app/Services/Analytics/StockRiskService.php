@@ -84,7 +84,18 @@ class StockRiskService
             'start_date' => now()->toDateString(),
         ];
 
-        $projectionResult = $this->analyticsClient->call('/projection', $projectionPayload);
+        try {
+            $projectionResult = $this->analyticsClient->call('/projection', $projectionPayload);
+        } catch (\Throwable $e) {
+            Log::warning("Analytics /projection endpoint failed, using internal calculation: " . $e->getMessage());
+            $projectionResult = $this->calculateStockProjectionFallback(
+                $availableStock,
+                $forecastPayload,
+                $leadTime,
+                $reviewPeriod,
+                $scheduledReceipts
+            );
+        }
 
         // 8. Evaluate and enforce mathematical risk classification rule
         // No ESD in horizon -> LOW
@@ -268,13 +279,86 @@ class StockRiskService
         // Trigger forecast run to refresh forecasts
         $this->forecastService->runForecast($productId, $branchId, $horizon);
 
-        return DemandForecast::query()
+        $fresh = DemandForecast::query()
             ->where('product_id', $productId)
             ->where('branch_id', $branchId)
             ->where('forecast_date', '>=', $today)
             ->orderBy('forecast_date')
             ->take($horizon)
             ->get();
+
+        if ($fresh->isNotEmpty()) {
+            return $fresh;
+        }
+
+        // Fallback: Use latest available forecasts matching demand forecasting
+        return DemandForecast::query()
+            ->where('product_id', $productId)
+            ->where('branch_id', $branchId)
+            ->orderBy('forecast_date', 'asc')
+            ->take($horizon)
+            ->get();
+    }
+
+    /**
+     * Pure PHP fallback for stock projection calculation matching the analytics engine.
+     *
+     * @param array<int, array<string, mixed>> $forecasts
+     * @param array<string, float> $scheduledReceipts
+     * @return array<string, mixed>
+     */
+    public function calculateStockProjectionFallback(
+        float $availableStock,
+        array $forecasts,
+        int $leadTime,
+        int $reviewPeriod,
+        array $scheduledReceipts = []
+    ): array {
+        $cumReceipts = 0.0;
+        $cumDemand = 0.0;
+        $esd = null;
+        $daysToStockout = null;
+        $projectedStock = [];
+        $today = now()->startOfDay();
+
+        foreach ($forecasts as $idx => $f) {
+            $step = $idx + 1;
+            $demand = (float) ($f['predicted_demand'] ?? 0.0);
+            $date = isset($f['date']) ? Carbon::parse($f['date'])->format('Y-m-d') : $today->copy()->addDays($step)->format('Y-m-d');
+            $receipt = (float) ($scheduledReceipts[$date] ?? 0.0);
+
+            $cumReceipts += $receipt;
+            $cumDemand += $demand;
+            $proj = $availableStock + $cumReceipts - $cumDemand;
+
+            $projectedStock[] = [
+                'step' => $step,
+                'date' => $date,
+                'predicted_demand' => round($demand, 2),
+                'scheduled_receipts' => round($receipt, 2),
+                'cumulative_demand' => round($cumDemand, 2),
+                'cumulative_receipts' => round($cumReceipts, 2),
+                'projected_stock' => round($proj, 2),
+            ];
+
+            if ($esd === null && $proj <= 0) {
+                $esd = $date;
+                $daysToStockout = $step;
+            }
+        }
+
+        $totalDemand = $cumDemand;
+        $avgDailyDemand = count($forecasts) > 0 ? ($totalDemand / count($forecasts)) : 0.0;
+        $daysOfCover = $avgDailyDemand > 0 ? round($availableStock / $avgDailyDemand, 1) : null;
+
+        return [
+            'available_stock' => $availableStock,
+            'total_predicted_demand' => round($totalDemand, 2),
+            'estimated_stockout_date' => $esd,
+            'days_to_stockout' => $daysToStockout,
+            'days_of_cover' => $daysOfCover,
+            'projected_stock' => $projectedStock,
+        ];
     }
 
     /**
