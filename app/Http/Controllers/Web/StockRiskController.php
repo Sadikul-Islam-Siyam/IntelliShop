@@ -25,6 +25,9 @@ class StockRiskController extends Controller
             ? (int) $request->query('branch_id')
             : ($user?->branch_id ?? $branches->first()?->id ?? 1);
 
+        // Automatically ensure projections for all active products are generated and fresh
+        $this->stockRiskService->ensureBranchPredictions($selectedBranchId);
+
         $selectedRisk = $request->query('risk_level')
             ? strtoupper($request->query('risk_level'))
             : null;

@@ -163,6 +163,40 @@ class StockRiskService
     }
 
     /**
+     * Ensures all active catalog products have up-to-date predictions for a branch.
+     * Automatically runs upon user login or page visit so data is never empty or stale.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function ensureBranchPredictions(int $branchId, bool $force = false, ?int $horizon = null): array
+    {
+        $products = Product::query()->where('status', 'active')->get();
+        $results = [];
+
+        foreach ($products as $product) {
+            $existing = StockPrediction::query()
+                ->where('product_id', $product->id)
+                ->where('branch_id', $branchId)
+                ->first();
+
+            $needsRun = $force
+                || !$existing
+                || !$existing->generated_at
+                || $existing->generated_at->isBefore(now()->startOfDay());
+
+            if ($needsRun) {
+                try {
+                    $results[] = $this->runStockRisk($product->id, $branchId, $horizon);
+                } catch (\Throwable $e) {
+                    Log::warning("Auto-run stock risk failed for product {$product->id}: " . $e->getMessage());
+                }
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * Runs stock risk assessment for all active catalog products at a branch.
      *
      * @return array<int, array<string, mixed>>
