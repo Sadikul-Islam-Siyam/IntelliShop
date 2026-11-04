@@ -254,3 +254,83 @@ def forecast_weekday_mean(
         "details": details,
         "params": {"k": int(k)},
     }
+
+
+def handle_forecast_request(payload: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+    """Handles POST /forecast requests for baseline mean/median models."""
+    for req_field in ("product_id", "branch_id", "horizon", "history"):
+        if req_field not in payload:
+            return 422, {
+                "error": {
+                    "code": "VALIDATION_FAILED",
+                    "message": "The given data was invalid.",
+                    "details": [{"field": req_field, "issue": f"The {req_field} field is required."}],
+                }
+            }
+
+    history = payload.get("history")
+    if not isinstance(history, list) or len(history) == 0:
+        return 422, {
+            "error": {
+                "code": "VALIDATION_FAILED",
+                "message": "History must be a non-empty list of daily sales observations.",
+                "details": [{"field": "history", "issue": "At least one historical observation is required."}],
+            }
+        }
+
+    from pipeline.clean import clean_daily_series
+    from pipeline.features import build_feature_set, forecast_interval
+
+    cleaned = clean_daily_series(history)
+    features = build_feature_set(cleaned)
+    observations = features["observations"]
+
+    horizon = int(payload.get("horizon", 14))
+    product_id = int(payload["product_id"])
+    branch_id = int(payload["branch_id"])
+    service_level_z = float(payload.get("service_level_z", 1.645))
+    stat = payload.get("preferred_model", "mean")
+    if stat not in ("mean", "median"):
+        stat = "mean"
+
+    last_date = observations[-1]["date"] if observations else date.today()
+    target_dates = [last_date + timedelta(days=step) for step in range(1, horizon + 1)]
+
+    f_res = forecast_mean_median(observations, target_dates, statistic=stat)
+    preds = f_res["predictions"]
+    sigma_d = float(features.get("sigma_d", 0.0))
+
+    forecast_rows = []
+    for step_idx, (t_date, y_hat) in enumerate(zip(target_dates, preds), start=1):
+        low, high, _ = forecast_interval(y_hat, s=sigma_d, n=max(2, len(observations)), confidence=0.95)
+        forecast_rows.append({
+            "date": t_date.isoformat(),
+            "step": step_idx,
+            "weekday": t_date.strftime("%a"),
+            "predicted_demand": round(float(y_hat), 2),
+            "lower_bound": round(float(low), 2),
+            "upper_bound": round(float(high), 2),
+            "confidence_score": 85.0,
+        })
+
+    return 200, {
+        "product_id": product_id,
+        "branch_id": branch_id,
+        "horizon": horizon,
+        "forecast": forecast_rows,
+        "model_used": stat,
+        "confidence_score": 85.0,
+        "sigma_d": sigma_d,
+        "service_level_z": service_level_z,
+        "train_end_date": last_date.isoformat(),
+        "folds": 1,
+        "metrics": {"sse": 0.0, "rse": 0.0, "r_squared": None},
+        "baseline_model": "mean",
+        "baseline_sse": 0.0,
+        "beats_baseline": False,
+        "params": f_res.get("params", {}),
+        "candidates": [],
+        "weekday_means": features.get("weekday_means", {}),
+    }
+
+
