@@ -40,6 +40,15 @@ def _register_projection_handler() -> None:
         pass
 
 
+def _register_reorder_handler() -> None:
+    """Registers the dynamic replenishment / reorder handler when available."""
+    try:
+        from analytics.replenishment import handle_reorder_request  # type: ignore
+        register_post_handler("/reorder", handle_reorder_request)
+    except ImportError:
+        pass
+
+
 def _register_forecast_handlers() -> None:
     """Registers the forecasting handlers when the model package is available."""
     try:
@@ -115,6 +124,9 @@ def dispatch_request(
 
         if parsed_path == "/projection" and parsed_path not in _POST_HANDLERS:
             _register_projection_handler()
+
+        if parsed_path == "/reorder" and parsed_path not in _POST_HANDLERS:
+            _register_reorder_handler()
 
         if parsed_path in _POST_HANDLERS:
             return _POST_HANDLERS[parsed_path](payload)

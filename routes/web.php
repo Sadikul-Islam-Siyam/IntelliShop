@@ -89,4 +89,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
         Route::get('/stock-risk', [\App\Http\Controllers\Web\StockRiskController::class, 'index'])->name('stock-risk.index');
     });
+
+    // Dynamic Replenishment & Safety Stock workspace (#45)
+    Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+        Route::get('/reorders', [\App\Http\Controllers\Web\ReorderController::class, 'index'])->name('reorder.index');
+        Route::get('/reorder', [\App\Http\Controllers\Web\ReorderController::class, 'index'])->name('reorder.show');
+    });
 });

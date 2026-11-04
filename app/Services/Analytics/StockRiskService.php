@@ -118,14 +118,23 @@ class StockRiskService
                 'predicted_stockout_date' => $esd,
                 'current_stock' => $availableStock,
                 'predicted_demand' => $totalDemand,
-                'recommended_reorder_qty' => 0, // Calculated downstream in #45
+                'recommended_reorder_qty' => 0,
                 'risk_level' => $riskLevel,
-                'safety_stock' => null, // Calculated downstream in #45
-                'reorder_point' => null, // Calculated downstream in #45
+                'safety_stock' => null,
+                'reorder_point' => null,
                 'lead_time_days' => $leadTime,
                 'generated_at' => now(),
             ]
         );
+
+        // 9b. Compute dynamic replenishment parameters (SS, ROP, recommended_reorder_qty)
+        try {
+            $reorderResult = app(\App\Services\ReorderCalculator::class)->calculate($productId, $branchId);
+            $prediction->refresh();
+        } catch (\Throwable $e) {
+            Log::warning("Reorder calculation during stock risk run failed for product {$productId}: " . $e->getMessage());
+            $reorderResult = null;
+        }
 
         // 10. Surface recommendation in ai_recommendations table
         $recommendation = $this->syncAiRecommendation(
@@ -156,6 +165,9 @@ class StockRiskService
                 'current_stock' => (float) $prediction->current_stock,
                 'predicted_demand' => (float) $prediction->predicted_demand,
                 'predicted_stockout_date' => $prediction->predicted_stockout_date?->format('Y-m-d'),
+                'safety_stock' => $prediction->safety_stock !== null ? (float) $prediction->safety_stock : null,
+                'reorder_point' => $prediction->reorder_point !== null ? (float) $prediction->reorder_point : null,
+                'recommended_reorder_qty' => (int) ($prediction->recommended_reorder_qty ?? 0),
                 'risk_level' => $prediction->risk_level,
                 'lead_time_days' => $prediction->lead_time_days,
                 'days_of_cover' => $projectionResult['days_of_cover'] ?? null,
@@ -163,6 +175,7 @@ class StockRiskService
                 'generated_at' => $prediction->generated_at?->toIso8601String(),
             ],
             'projection' => $projectionResult['projected_stock'] ?? [],
+            'reorder' => $reorderResult['calculation'] ?? null,
             'recommendation' => $recommendation ? [
                 'id' => $recommendation->id,
                 'type' => $recommendation->type,
@@ -192,6 +205,8 @@ class StockRiskService
 
             $needsRun = $force
                 || !$existing
+                || $existing->safety_stock === null
+                || $existing->reorder_point === null
                 || !$existing->generated_at
                 || $existing->generated_at->isBefore(now()->startOfDay());
 
@@ -389,11 +404,13 @@ class StockRiskService
                 continue;
             }
 
-            $date = $po->expected_delivery_date
-                ? Carbon::parse($po->expected_delivery_date)->format('Y-m-d')
+            $expectedDate = $po->expected_delivery_date ?? $po->expected_date;
+            $date = $expectedDate
+                ? Carbon::parse($expectedDate)->format('Y-m-d')
                 : now()->addDays($leadTime)->format('Y-m-d');
 
-            $remaining = max(0, (int) $item->quantity_ordered - (int) ($item->quantity_received ?? 0));
+            $orderedQty = (int) ($item->quantity_ordered ?? $item->quantity ?? 0);
+            $remaining = max(0, $orderedQty - (int) ($item->quantity_received ?? 0));
             if ($remaining > 0) {
                 $receipts[$date] = ($receipts[$date] ?? 0.0) + $remaining;
             }
