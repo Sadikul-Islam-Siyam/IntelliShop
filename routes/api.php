@@ -90,6 +90,14 @@ Route::prefix('v1')->group(function () {
             Route::post('forecasts/run', [ForecastController::class, 'run'])->name('api.v1.forecasts.run');
             Route::post('forecasts/run-all', [ForecastController::class, 'runAll'])->name('api.v1.forecasts.run-all');
         });
+
+        // Stock-Out Risk Classification endpoints (#44)
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+            Route::get('stock-risk', [\App\Http\Controllers\Api\V1\StockRiskController::class, 'index'])->name('api.v1.stock-risk.index');
+        });
+        Route::middleware('role:admin,super-admin,system-analyst,purchase-manager,branch-manager')->group(function () {
+            Route::post('stock-risk/run', [\App\Http\Controllers\Api\V1\StockRiskController::class, 'run'])->name('api.v1.stock-risk.run');
+        });
     });
 
     // Analytics Data Extraction API
