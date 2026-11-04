@@ -98,6 +98,14 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:admin,super-admin,system-analyst,purchase-manager,branch-manager')->group(function () {
             Route::post('stock-risk/run', [\App\Http\Controllers\Api\V1\StockRiskController::class, 'run'])->name('api.v1.stock-risk.run');
         });
+
+        // Dynamic Replenishment & Safety Stock endpoints (#45)
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+            Route::get('reorder', [\App\Http\Controllers\Api\V1\ReorderController::class, 'index'])->name('api.v1.reorder.index');
+        });
+        Route::middleware('role:admin,super-admin,purchase-manager,branch-manager,system-analyst')->group(function () {
+            Route::post('reorder/calculate', [\App\Http\Controllers\Api\V1\ReorderController::class, 'calculate'])->name('api.v1.reorder.calculate');
+        });
     });
 
     // Analytics Data Extraction API

@@ -34,6 +34,7 @@
                     <strong>{{ $user->name ?? 'User' }}</strong> ({{ $user->role->name ?? 'User' }})
                 </span>
                 <a href="{{ route('forecasts.index') }}" class="btn-nav">Demand Forecasts</a>
+                <a href="{{ route('reorder.index') }}" class="btn-nav">Reorder Calculations</a>
                 <a href="/dashboard" class="btn-nav">&larr; Dashboard</a>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
@@ -81,9 +82,9 @@
                     <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block;"></span>
                     Automatic Sync: Active
                 </span>
-                <button type="button" class="btn-action" onclick="refreshAllAssessments()" style="background: #4f46e5;">
-                    Refresh All
-                </button>
+                <a href="{{ route('reorder.index', ['branch_id' => $selectedBranchId]) }}" class="btn-action">
+                    View Full ROP &amp; Constraint Breakdown &rarr;
+                </a>
             </div>
         </div>
 
@@ -95,8 +96,11 @@
                         <th>SKU</th>
                         <th>Current Stock</th>
                         <th>Supplier Lead Time (L)</th>
+                        <th>Safety Stock (SS)</th>
+                        <th>Reorder Point (ROP)</th>
                         <th>Predicted Stock-Out (ESD)</th>
                         <th>Forecasted Demand</th>
+                        <th>Reorder Qty</th>
                         <th>Risk Level</th>
                     </tr>
                 </thead>
@@ -107,6 +111,8 @@
                             <td><code>{{ $pred->product?->sku ?? '—' }}</code></td>
                             <td>{{ number_format((float) $pred->current_stock, 0) }} units</td>
                             <td>{{ $pred->lead_time_days ?? 7 }} days</td>
+                            <td>{{ $pred->safety_stock !== null ? number_format((float) $pred->safety_stock, 2) : '—' }}</td>
+                            <td>{{ $pred->reorder_point !== null ? number_format((float) $pred->reorder_point, 2) : '—' }}</td>
                             <td>
                                 @if($pred->predicted_stockout_date)
                                     <strong>{{ \Carbon\Carbon::parse($pred->predicted_stockout_date)->format('M d, Y') }}</strong>
@@ -115,6 +121,7 @@
                                 @endif
                             </td>
                             <td>{{ number_format((float) $pred->predicted_demand, 1) }}</td>
+                            <td><strong>{{ number_format((int) ($pred->recommended_reorder_qty ?? 0)) }} units</strong></td>
                             <td>
                                 <span class="badge-risk badge-{{ $pred->risk_level }}">
                                     {{ $pred->risk_level }}
@@ -123,7 +130,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            <td colspan="10" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
                                 No products found for this branch. Projections auto-populate automatically on catalog activity.
                             </td>
                         </tr>
