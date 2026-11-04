@@ -53,39 +53,6 @@
             </div>
         </div>
 
-        @php
-            $totalBranchUnits = collect($productForecasts)->sum('total_horizon_units');
-            $totalNext7Units = collect($productForecasts)->sum('next_7_days_units');
-            $totalTomorrowUnits = collect($productForecasts)->sum('next_day_units');
-        @endphp
-
-        <!-- Summary KPI Cards -->
-        <section class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-label">Tomorrow's Required Units</div>
-                <div class="kpi-value">{{ $totalTomorrowUnits }} units</div>
-                <div class="kpi-sub">Across all active products</div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-label">Next 7 Days Requirement</div>
-                <div class="kpi-value">{{ $totalNext7Units }} units</div>
-                <div class="kpi-sub">Total weekly demand</div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-label">Next {{ $horizonDays }} Days Requirement</div>
-                <div class="kpi-value">{{ $totalBranchUnits }} units</div>
-                <div class="kpi-sub">Full upcoming horizon</div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-label">Forecasted Products</div>
-                <div class="kpi-value">{{ count($productForecasts) }} items</div>
-                <div class="kpi-sub">Active catalog items</div>
-            </div>
-        </section>
-
         <!-- Product Summary Table -->
         <section class="card-panel">
             <div class="card-panel-header">
