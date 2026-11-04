@@ -254,3 +254,4 @@ def forecast_weekday_mean(
         "details": details,
         "params": {"k": int(k)},
     }
+
