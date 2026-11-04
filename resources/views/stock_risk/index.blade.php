@@ -301,12 +301,13 @@
             </form>
 
             <div class="filter-group">
-                <select id="quickRunProductId" class="select-input">
-                    @foreach($products as $p)
-                        <option value="{{ $p->id }}">{{ $p->name }} ({{ $p->sku }})</option>
-                    @endforeach
-                </select>
-                <button type="button" class="btn-action" onclick="triggerRiskAssessment()">Run Risk Assessment</button>
+                <span style="font-size: 0.8rem; color: var(--success); font-weight: 700; display: flex; align-items: center; gap: 0.35rem;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block;"></span>
+                    Automatic Sync: Active
+                </span>
+                <button type="button" class="btn-action" onclick="refreshAllAssessments()" style="background: #4f46e5;">
+                    Refresh All
+                </button>
             </div>
         </div>
 
@@ -321,7 +322,6 @@
                         <th>Predicted Stock-Out (ESD)</th>
                         <th>Forecasted Demand</th>
                         <th>Risk Level</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -344,16 +344,11 @@
                                     {{ $pred->risk_level }}
                                 </span>
                             </td>
-                            <td>
-                                <button type="button" class="btn-run-item" onclick="triggerRiskAssessment({{ $pred->product_id }})">
-                                    Re-assess
-                                </button>
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
-                                No stock predictions found for this branch. Select a product and click <strong>Run Risk Assessment</strong> to generate live projections.
+                            <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                                No products found for this branch. Projections auto-populate automatically on catalog activity.
                             </td>
                         </tr>
                     @endforelse
@@ -363,43 +358,12 @@
     </div>
 
     <script>
-        async function triggerRiskAssessment(specificProductId = null) {
-            const branchId = {{ $selectedBranchId }};
-            const productId = specificProductId || document.getElementById('quickRunProductId').value;
+        async function refreshAllAssessments() {
             const alertBox = document.getElementById('statusAlert');
-
             alertBox.style.display = 'block';
-            alertBox.className = 'alert-box';
-            alertBox.innerText = 'Calculating stock projection and risk classification...';
-
-            try {
-                const response = await fetch('/api/v1/stock-risk/run', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        product_id: parseInt(productId),
-                        branch_id: parseInt(branchId)
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alertBox.className = 'alert-box alert-success';
-                    alertBox.innerText = `Success: Risk level for ${data.data.product.name} is ${data.data.prediction.risk_level}. Refreshing...`;
-                    setTimeout(() => window.location.reload(), 1200);
-                } else {
-                    alertBox.className = 'alert-box alert-error';
-                    alertBox.innerText = data.error?.message || 'Failed to execute stock-out risk assessment.';
-                }
-            } catch (err) {
-                alertBox.className = 'alert-box alert-error';
-                alertBox.innerText = 'Network error while triggering stock risk run.';
-            }
+            alertBox.className = 'alert-box alert-success';
+            alertBox.innerText = 'Synchronizing real-time timeline projections for all branch products...';
+            setTimeout(() => window.location.reload(), 600);
         }
     </script>
 </body>

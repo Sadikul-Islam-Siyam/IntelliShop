@@ -29,6 +29,14 @@ class StockRiskController extends Controller
             'product_id' => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
+        $branchId = !empty($validated['branch_id'])
+            ? (int) $validated['branch_id']
+            : ($request->user()?->branch_id ?? Branch::query()->where('status', 'active')->value('id') ?? 1);
+
+        if ($branchId) {
+            $this->stockRiskService->ensureBranchPredictions((int) $branchId);
+        }
+
         $query = StockPrediction::query()->with(['product', 'branch']);
 
         if (!empty($validated['branch_id'])) {

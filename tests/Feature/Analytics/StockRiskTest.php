@@ -145,6 +145,28 @@ class StockRiskTest extends TestCase
         $response = $this->actingAs($analyst)->get('/stock-risk');
         $response->assertOk()
             ->assertSee('Stock-Out Risk Classification')
-            ->assertSee('Run Risk Assessment');
+            ->assertSee('Automatic Sync');
+    }
+
+    public function test_inventory_change_automatically_triggers_stock_risk_update(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $branch = Branch::query()->firstOrFail();
+        $product = Product::query()->where('sku', 'MILK-1L-001')->firstOrFail();
+
+        // Simulate an inventory reduction (e.g. sale or deduction)
+        $inventory = Inventory::query()->where('product_id', $product->id)->where('branch_id', $branch->id)->firstOrFail();
+        $inventory->quantity_available = 5;
+        $inventory->save();
+
+        $prediction = StockPrediction::query()
+            ->where('product_id', $product->id)
+            ->where('branch_id', $branch->id)
+            ->first();
+
+        $this->assertNotNull($prediction);
+        $this->assertEquals(5.0, (float) $prediction->current_stock);
+        $this->assertEquals('HIGH', $prediction->risk_level);
     }
 }
