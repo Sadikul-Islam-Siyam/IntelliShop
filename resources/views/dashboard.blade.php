@@ -81,6 +81,9 @@
                         </p>
                     </div>
                     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="{{ route('reorder.index') }}" class="workspace-badge" style="text-decoration: none; background: #e0e7ff; color: #4338ca; font-weight: 700;">
+                            Replenishment &rarr;
+                        </a>
                         <a href="{{ route('stock-risk.index') }}" class="workspace-badge" style="text-decoration: none; background: #fee2e2; color: #b91c1c; font-weight: 700;">
                             Stock-Out Risk &rarr;
                         </a>
