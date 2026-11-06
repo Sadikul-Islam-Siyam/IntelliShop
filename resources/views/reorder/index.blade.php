@@ -138,8 +138,40 @@
                                         <div class="sku-subtext">{{ $prod['sku'] }}</div>
                                     </td>
                                     <td>
-                                        <div style="font-weight: 700; color: var(--text);">{{ $supp['name'] ?? 'Preferred Supplier' }}</div>
-                                        <div class="supplier-subtext">{{ $supp['lead_time_days'] }}d lead time &bull; MOQ: {{ $supp['moq'] }} &bull; Mult: &times;{{ $supp['order_multiple'] }}</div>
+                                        @php
+                                            $availableSuppliers = !empty($item['available_suppliers']) ? $item['available_suppliers'] : [$supp];
+                                        @endphp
+                                        @if(count($availableSuppliers) > 1)
+                                            <select class="supplier-select"
+                                                    id="supplier_select_{{ $prod['id'] }}"
+                                                    data-product-id="{{ $prod['id'] }}"
+                                                    data-qty="{{ $finalQty }}"
+                                                    onchange="handleSupplierChange({{ $prod['id'] }}, this)">
+                                                @foreach($availableSuppliers as $avail)
+                                                    @php
+                                                        $isSel = ($avail['id'] ?? null) == ($supp['id'] ?? null);
+                                                        $availPrice = (float) ($avail['supply_price'] ?? $unitPrice);
+                                                        $availLead = (int) ($avail['lead_time_days'] ?? $supp['lead_time_days']);
+                                                        $availMoq = (int) ($avail['min_order_qty'] ?? $avail['moq'] ?? $supp['moq']);
+                                                        $availMult = (int) ($avail['order_multiple'] ?? $supp['order_multiple']);
+                                                    @endphp
+                                                    <option value="{{ $avail['id'] }}"
+                                                            data-price="{{ $availPrice }}"
+                                                            data-lead="{{ $availLead }}"
+                                                            data-moq="{{ $availMoq }}"
+                                                            data-mult="{{ $availMult }}"
+                                                            {{ $isSel ? 'selected' : '' }}>
+                                                        {{ $avail['name'] }} @if(!empty($avail['is_preferred']))(Preferred)@endif &bull; ${{ number_format($availPrice, 2) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <div class="supplier-subtext" id="supplier_subtext_{{ $prod['id'] }}">
+                                                {{ $supp['lead_time_days'] }}d lead time &bull; MOQ: {{ $supp['moq'] }} &bull; Mult: &times;{{ $supp['order_multiple'] }}
+                                            </div>
+                                        @else
+                                            <div style="font-weight: 700; color: var(--text);">{{ $supp['name'] ?? 'Preferred Supplier' }}</div>
+                                            <div class="supplier-subtext">{{ $supp['lead_time_days'] }}d lead time &bull; MOQ: {{ $supp['moq'] }} &bull; Mult: &times;{{ $supp['order_multiple'] }}</div>
+                                        @endif
                                     </td>
                                     <td>
                                         <div style="font-weight: 700; color: var(--text);">{{ number_format((float) $params['available_stock'], 0) }} units</div>
@@ -148,7 +180,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="price-text">${{ number_format($unitPrice, 2) }}</div>
+                                        <div class="price-text" id="unit_price_display_{{ $prod['id'] }}">${{ number_format($unitPrice, 2) }}</div>
                                         <div class="price-sub">per unit</div>
                                     </td>
                                     <td>
@@ -163,9 +195,9 @@
                                     </td>
                                     <td>
                                         @if($finalQty > 0)
-                                            <div class="total-price">${{ number_format($totalCost, 2) }}</div>
+                                            <div class="total-price" id="total_price_display_{{ $prod['id'] }}">${{ number_format($totalCost, 2) }}</div>
                                         @else
-                                            <div style="color: var(--text-muted); font-size: 0.85rem;">$0.00</div>
+                                            <div id="total_price_display_{{ $prod['id'] }}" style="color: var(--text-muted); font-size: 0.85rem;">$0.00</div>
                                         @endif
                                     </td>
                                     <td style="text-align: right;">
@@ -174,9 +206,9 @@
                                                 @csrf
                                                 <input type="hidden" name="product_id" value="{{ $prod['id'] }}">
                                                 <input type="hidden" name="branch_id" value="{{ $selectedBranchId }}">
-                                                <input type="hidden" name="supplier_id" value="{{ $supp['id'] ?? '' }}">
+                                                <input type="hidden" name="supplier_id" id="hidden_supplier_{{ $prod['id'] }}" value="{{ $supp['id'] ?? '' }}">
                                                 <input type="hidden" name="quantity" value="{{ $finalQty }}">
-                                                <input type="hidden" name="unit_price" value="{{ $unitPrice }}">
+                                                <input type="hidden" name="unit_price" id="hidden_price_{{ $prod['id'] }}" value="{{ $unitPrice }}">
                                                 <button type="submit" class="btn-approve">Approve Order</button>
                                             </form>
                                         @elseif($isConflict)
@@ -204,5 +236,47 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        function handleSupplierChange(productId, selectElem) {
+            const selectedOpt = selectElem.options[selectElem.selectedIndex];
+            if (!selectedOpt) return;
+
+            const price = parseFloat(selectedOpt.getAttribute('data-price')) || 0.0;
+            const lead = selectedOpt.getAttribute('data-lead') || '7';
+            const moq = selectedOpt.getAttribute('data-moq') || '0';
+            const mult = selectedOpt.getAttribute('data-mult') || '1';
+            const qty = parseInt(selectElem.getAttribute('data-qty'), 10) || 0;
+
+            const subtextElem = document.getElementById('supplier_subtext_' + productId);
+            if (subtextElem) {
+                subtextElem.innerHTML = lead + 'd lead time &bull; MOQ: ' + moq + ' &bull; Mult: &times;' + mult;
+            }
+
+            const unitPriceElem = document.getElementById('unit_price_display_' + productId);
+            if (unitPriceElem) {
+                unitPriceElem.textContent = '$' + price.toFixed(2);
+            }
+
+            const totalPriceElem = document.getElementById('total_price_display_' + productId);
+            if (totalPriceElem) {
+                if (qty > 0) {
+                    const total = qty * price;
+                    totalPriceElem.textContent = '$' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                } else {
+                    totalPriceElem.textContent = '$0.00';
+                }
+            }
+
+            const hiddenSupplier = document.getElementById('hidden_supplier_' + productId);
+            if (hiddenSupplier) {
+                hiddenSupplier.value = selectElem.value;
+            }
+            const hiddenPrice = document.getElementById('hidden_price_' + productId);
+            if (hiddenPrice) {
+                hiddenPrice.value = price.toFixed(2);
+            }
+        }
+    </script>
 </body>
 </html>

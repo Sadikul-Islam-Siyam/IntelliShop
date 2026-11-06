@@ -510,6 +510,32 @@ tr:hover td {
     cursor: not-allowed;
 }
 
+.supplier-select {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    background-color: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 260px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    outline: none;
+}
+
+.supplier-select:hover {
+    border-color: #cbd5e1;
+    background-color: #ffffff;
+}
+
+.supplier-select:focus {
+    border-color: var(--accent);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
 .price-text {
     font-size: 0.9rem;
     font-weight: 700;
