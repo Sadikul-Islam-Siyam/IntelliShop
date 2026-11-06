@@ -3,10 +3,6 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Branch;
-use App\Models\Product;
-use App\Services\Analytics\DemandForecastService;
-use Database\Seeders\DemoDataSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -15,10 +11,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DashboardController extends Controller
 {
-    public function __construct(
-        private readonly DemandForecastService $forecastService,
-    ) {}
-
     /**
      * Redirect authenticated user to their role-specific landing dashboard.
      */
@@ -60,27 +52,11 @@ class DashboardController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Access denied. You do not have permission to access this dashboard.');
         }
 
-        $upcomingDemand = [];
-        $canViewForecast = $user->isSuperAdmin()
-            || $user->hasPermission('ml.forecast.view')
-            || $user->hasRole(['admin', 'super-admin', 'branch-manager', 'inventory-manager', 'purchase-manager', 'system-analyst']);
-
-        if ($canViewForecast) {
-            if (Product::query()->count() === 0 || Branch::query()->count() === 0) {
-                app(DemoDataSeeder::class)->run();
-            }
-            $branchId = (int) ($user->branch_id ?: (Branch::query()->where('status', 'active')->value('id') ?? 1));
-            if ($branchId > 0 && Branch::whereKey($branchId)->exists()) {
-                $upcomingDemand = $this->forecastService->ensureBranchForecasts($branchId);
-            }
-        }
-
         return view('dashboard', [
             'user' => $user,
             'roleConfig' => $roleConfig,
             'roleSlug' => $normalizedSlug,
             'permissions' => $user->getPermissions(),
-            'upcomingDemand' => $upcomingDemand,
         ]);
     }
 }
