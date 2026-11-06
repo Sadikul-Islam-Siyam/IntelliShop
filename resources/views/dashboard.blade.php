@@ -71,10 +71,10 @@
     </main>
     <footer class="dashboard-footer">
         <div class="footer-container">
-            <div class="footer-brand">
-                <strong>IntelliShop</strong> &mdash; Intelligent Super Shop Management & Decision Support System.
+            <div>
+                <strong>IntelliShop</strong> &mdash; Intelligent Super Shop Management &amp; Decision Support System.
             </div>
-            <div class="footer-meta">
+            <div>
                 <span>&copy; {{ date('Y') }} IntelliShop. All rights reserved.</span>
             </div>
         </div>
