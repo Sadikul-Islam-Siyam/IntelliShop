@@ -4,35 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Replenishment &amp; Safety Stock — IntelliShop</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32x32.png') }}">
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/reorder.css') }}">
 </head>
 <body>
-    <nav class="navbar">
-        <a href="/dashboard" class="navbar-brand">
-            <img src="/images/logo.jpg" alt="IntelliShop">
-            <span>IntelliShop</span>
-        </a>
-        <div class="navbar-right">
-            @if(isset($user))
+    <header>
+        <nav class="navbar">
+            <a href="/dashboard" class="brand">
+                <div class="navbar-logo-sticker">
+                    <img src="{{ asset('images/logo.jpg') }}" alt="IntelliShop" class="navbar-logo">
+                </div>
+                <span class="brand-name">IntelliShop</span>
+            </a>
+            <div class="nav-actions">
                 <span class="nav-user-info">
-                    {{ $user->name }}
-                    @if($user->role)
-                        <span class="nav-user-role">({{ $user->role->display_name ?? $user->role->name }})</span>
-                    @endif
+                    <strong>{{ $user->name ?? 'Manager' }}</strong> ({{ $user->role->name ?? 'Manager' }})
                 </span>
-            @endif
-            <a href="/forecasting" class="nav-link-btn">Demand Forecasts</a>
-            <a href="/stock-risk" class="nav-link-btn">Stock-Out Risk</a>
-            <a href="/dashboard" class="nav-link-btn">Dashboard</a>
-            <form method="POST" action="{{ route('logout') }}" class="nav-logout-form">
-                @csrf
-                <button type="submit" class="btn-logout">Sign Out</button>
-            </form>
-        </div>
-    </nav>
+                <a href="/dashboard" class="btn-nav">&larr; Dashboard</a>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn-logout">Logout</button>
+                </form>
+            </div>
+        </nav>
+    </header>
 
     <div class="container">
         <div class="page-header">

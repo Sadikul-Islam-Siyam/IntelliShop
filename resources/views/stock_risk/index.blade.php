@@ -31,10 +31,8 @@
             </a>
             <div class="nav-actions">
                 <span class="nav-user-info">
-                    <strong>{{ $user->name ?? 'User' }}</strong> ({{ $user->role->name ?? 'User' }})
+                    <strong>{{ $user->name ?? 'Manager' }}</strong> ({{ $user->role->name ?? 'Manager' }})
                 </span>
-                <a href="{{ route('forecasts.index') }}" class="btn-nav">Demand Forecasts</a>
-                <a href="{{ route('reorder.index') }}" class="btn-nav">Reorder Calculations</a>
                 <a href="/dashboard" class="btn-nav">&larr; Dashboard</a>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
