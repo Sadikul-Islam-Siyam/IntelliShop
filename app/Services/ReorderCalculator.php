@@ -179,6 +179,9 @@ class ReorderCalculator
                 'sku' => $product->sku,
                 'is_expiry_tracked' => (bool) $product->is_expiry_tracked,
                 'shelf_life_days' => $shelfLifeDays,
+                'cost_price' => (float) ($product->cost_price ?? 0.0),
+                'selling_price' => (float) ($product->selling_price ?? 0.0),
+                'unit_price' => (float) ($supplierTerms['supply_price'] ?: ($product->cost_price ?: $product->selling_price)),
             ],
             'branch' => [
                 'id' => $branch->id,
@@ -191,6 +194,7 @@ class ReorderCalculator
                 'lead_time_days' => $leadTimeDays,
                 'moq' => $moq,
                 'order_multiple' => $orderMultiple,
+                'supply_price' => (float) ($supplierTerms['supply_price'] ?? 0.0),
             ],
             'parameters' => [
                 'avg_daily_demand' => (float) $fullResult['avg_daily_demand'],
@@ -519,6 +523,7 @@ class ReorderCalculator
                 'lead_time_days' => max(1, (int) ($record->lead_time_days ?? 7)),
                 'moq' => max(0, (int) ($record->min_order_qty ?? 0)),
                 'order_multiple' => max(1, (int) ($record->order_multiple ?? 1)),
+                'supply_price' => (float) ($record->supply_price ?? 0.0),
             ];
         }
 
@@ -532,6 +537,7 @@ class ReorderCalculator
             'lead_time_days' => max(1, $defaultLeadTime),
             'moq' => 1,
             'order_multiple' => 1,
+            'supply_price' => 0.0,
         ];
     }
 

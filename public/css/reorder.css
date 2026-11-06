@@ -34,6 +34,18 @@
     --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
@@ -465,32 +477,76 @@ tr:hover td {
     color: var(--text-muted);
 }
 
+/* Action Button for Purchase Order Approval */
+.btn-approve {
+    padding: 0.48rem 0.95rem;
+    background: #059669;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25);
+}
+
+.btn-approve:hover {
+    background: #047857;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);
+}
+
+.btn-approve-disabled {
+    padding: 0.48rem 0.85rem;
+    background: #f1f5f9;
+    color: #94a3b8;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: not-allowed;
+}
+
+.price-text {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.price-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.total-price {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.final-qty-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #059669;
+}
+
 /* Unified Dark Sticky Footer */
-.app-footer {
+.dashboard-footer {
     background: #090d16;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-    padding: 1.4rem 2rem;
-    color: #6b7280;
-    font-size: 0.78rem;
+    color: #94a3b8;
+    padding: 1.35rem 2rem;
+    border-top: 1px solid #1e293b;
+    margin-top: auto;
+    font-size: 0.85rem;
+}
+
+.footer-container {
+    max-width: 1320px;
+    margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: auto;
-}
-
-.app-footer-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    color: #d1d5db;
-    font-weight: 600;
-}
-
-.app-footer-brand img {
-    height: 22px;
-    width: 22px;
-    border-radius: 5px;
-    object-fit: contain;
 }
