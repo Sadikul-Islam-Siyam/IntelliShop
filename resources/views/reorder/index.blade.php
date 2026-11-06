@@ -3,49 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Replenishment &amp; Safety Stock — IntelliShop</title>
+    <title>Dynamic Replenishment &amp; Purchase Orders — IntelliShop</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32x32.png') }}">
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/reorder.css') }}">
 </head>
 <body>
-    <nav class="navbar">
-        <a href="/dashboard" class="navbar-brand">
-            <img src="/images/logo.jpg" alt="IntelliShop">
-            <span>IntelliShop</span>
-        </a>
-        <div class="navbar-right">
-            @if(isset($user))
+    <header>
+        <nav class="navbar">
+            <a href="/dashboard" class="brand">
+                <div class="navbar-logo-sticker">
+                    <img src="{{ asset('images/logo.jpg') }}" alt="IntelliShop" class="navbar-logo">
+                </div>
+                <span class="brand-name">IntelliShop</span>
+            </a>
+            <div class="nav-actions">
                 <span class="nav-user-info">
-                    {{ $user->name }}
-                    @if($user->role)
-                        <span class="nav-user-role">({{ $user->role->display_name ?? $user->role->name }})</span>
-                    @endif
+                    <strong>{{ $user->name ?? 'Manager' }}</strong> ({{ $user->role->name ?? 'Manager' }})
                 </span>
-            @endif
-            <a href="/forecasting" class="nav-link-btn">Demand Forecasts</a>
-            <a href="/stock-risk" class="nav-link-btn">Stock-Out Risk</a>
-            <a href="/dashboard" class="nav-link-btn">Dashboard</a>
-            <form method="POST" action="{{ route('logout') }}" class="nav-logout-form">
-                @csrf
-                <button type="submit" class="btn-logout">Sign Out</button>
-            </form>
-        </div>
-    </nav>
+                <a href="/dashboard" class="btn-nav">&larr; Dashboard</a>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn-logout">Logout</button>
+                </form>
+            </div>
+        </nav>
+    </header>
 
     <div class="container">
+        @if(session('success'))
+            <div class="alert-box alert-success" style="display: block; margin-bottom: 1.5rem; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 0.85rem 1.25rem; border-radius: 8px; font-weight: 600;">
+                ✓ {{ session('success') }}
+            </div>
+        @endif
+
         <div class="page-header">
             <div>
-                <h1 class="page-title">Dynamic Replenishment &amp; Safety Stock (ROP + Constraints)</h1>
+                <h1 class="page-title">
+                    Dynamic Replenishment &amp; Purchase Advice
+                    <span class="sr-only">Safety Stock (SS), Reorder Point (ROP), Target Stock</span>
+                </h1>
                 <p class="page-subtitle">
-                    Automated Safety Stock (SS), Reorder Point (ROP), Target Stock, and Sequential Constraint Pipeline
+                    Automated replenishment quantities, verified supplier contract terms, and purchase order approval.
                 </p>
-            </div>
-            <div class="formula-bar">
-                <span class="formula-pill">SS = z &times; &sigma;<sub>d</sub> &times; &radic;L (z = {{ number_format($serviceLevelZ, 3) }})</span>
-                <span class="formula-pill">ROP = d&#772; &times; L + SS</span>
-                <span class="formula-pill">Target = Forecast(L + R) + SS (R = {{ $reviewPeriod }}d)</span>
             </div>
         </div>
 
@@ -67,9 +73,9 @@
                     <label class="form-label" for="risk_level">Risk Tier</label>
                     <select name="risk_level" id="risk_level" class="form-control" onchange="this.form.submit()">
                         <option value="" @selected($selectedRisk === '')>All Risk Levels</option>
-                        <option value="HIGH" @selected($selectedRisk === 'HIGH')>HIGH (&le; L days)</option>
-                        <option value="MEDIUM" @selected($selectedRisk === 'MEDIUM')>MEDIUM (&le; L + R days)</option>
-                        <option value="LOW" @selected($selectedRisk === 'LOW')>LOW (&gt; L + R days)</option>
+                        <option value="HIGH" @selected($selectedRisk === 'HIGH')>High Risk</option>
+                        <option value="MEDIUM" @selected($selectedRisk === 'MEDIUM')>Medium Risk</option>
+                        <option value="LOW" @selected($selectedRisk === 'LOW')>Low Risk</option>
                     </select>
                 </div>
 
@@ -83,16 +89,16 @@
                 </div>
             </form>
             <div class="toolbar-meta">
-                Showing {{ count($recommendations) }} products &bull; Review Period (R): {{ $reviewPeriod }} days &bull; Service Level z: {{ number_format($serviceLevelZ, 3) }} (95%)
+                Showing {{ count($recommendations) }} products for selected branch
             </div>
         </div>
 
-        <!-- Manager Review Table Showing Every Parameter & Constraint Step -->
+        <!-- Clean Manager Replenishment Review Table -->
         <div class="section-card">
             <div class="section-header">
-                <div class="section-title">Replenishment Parameter &amp; Constraint Review Table</div>
+                <div class="section-title">Replenishment Order Recommendations</div>
                 <div class="section-badge">
-                    Sequential Pipeline: 1. MOQ &rarr; 2. Order Multiple &rarr; 3. Max Capacity &rarr; 4. Perishable Shelf-Life
+                    Supplier-Verified Replenishment
                 </div>
             </div>
 
@@ -105,17 +111,13 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Product / Supplier</th>
-                                <th>Demand (d&#772; / &sigma;<sub>d</sub>)</th>
-                                <th>Horizon (L / R / z)</th>
-                                <th>Safety Stock (SS)</th>
-                                <th>Reorder Point (ROP)</th>
-                                <th>Target Stock</th>
-                                <th>Available Stock</th>
-                                <th>Raw Qty</th>
-                                <th>Supplier &amp; Cap Constraints</th>
-                                <th>Recommended Qty</th>
-                                <th>Risk</th>
+                                <th>Product</th>
+                                <th>Available Supplier</th>
+                                <th>Current Stock</th>
+                                <th>Unit Price</th>
+                                <th>Replenishment Quantity</th>
+                                <th>Total Estimated Price</th>
+                                <th style="text-align: right;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -125,98 +127,95 @@
                                     $supp = $item['supplier'];
                                     $params = $item['parameters'];
                                     $calc = $item['calculation'];
-                                    $pred = $item['prediction'];
                                     $isConflict = (bool) ($calc['conflict'] ?? false);
                                     $finalQty = (int) ($calc['final_quantity'] ?? 0);
+                                    $unitPrice = (float) ($prod['unit_price'] ?? 0.0);
+                                    $totalCost = round($finalQty * $unitPrice, 2);
                                 @endphp
                                 <tr class="{{ $isConflict ? 'row-conflict' : '' }}">
                                     <td>
                                         <div class="product-name">{{ $prod['name'] }}</div>
                                         <div class="sku-subtext">{{ $prod['sku'] }}</div>
-                                        <div class="supplier-subtext">{{ $supp['name'] ?? 'Preferred Supplier' }}</div>
                                     </td>
                                     <td>
-                                        <div class="param-stack">
-                                            <span class="param-main">d&#772; = {{ number_format((float) $params['avg_daily_demand'], 2) }} /day</span>
-                                            <span class="param-sub">&sigma;<sub>d</sub> = {{ number_format((float) $params['demand_stddev'], 2) }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="param-stack">
-                                            <span class="param-main">L = {{ $params['lead_time_days'] }}d &bull; R = {{ $params['review_period_days'] }}d</span>
-                                            <span class="param-sub">z = {{ number_format((float) $params['service_level_z'], 3) }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="param-stack">
-                                            <span class="ss-value">{{ number_format((float) $calc['safety_stock'], 2) }}</span>
-                                            <span class="param-sub">L-Demand: {{ number_format((float) $calc['lead_time_demand'], 1) }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="rop-value">{{ number_format((float) $calc['reorder_point'], 2) }}</span>
-                                    </td>
-                                    <td>
-                                        <div class="param-stack">
-                                            <span class="target-value">{{ number_format((float) $calc['target_stock'], 2) }}</span>
-                                            <span class="param-sub">D(L+R): {{ number_format((float) $calc['forecast_demand_l_plus_r'], 1) }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="param-stack">
-                                            <span class="param-main">{{ number_format((float) $params['available_stock'], 0) }} units</span>
-                                            <span class="param-sub">
-                                                On-hand: {{ number_format((float) $params['stock'], 0) }}
-                                                @if((float) $params['reserved'] > 0)
-                                                    &bull; Res: {{ number_format((float) $params['reserved'], 0) }}
-                                                @endif
-                                                @if((float) $params['on_order'] > 0)
-                                                    &bull; PO: +{{ number_format((float) $params['on_order'], 0) }}
-                                                @endif
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="raw-qty-value">{{ number_format((float) $calc['raw_quantity'], 2) }}</span>
-                                    </td>
-                                    <td>
-                                        <div class="constraint-list">
-                                            <span class="constraint-tag {{ in_array('moq', $calc['constraints'], true) ? 'constraint-tag-active' : '' }}">
-                                                MOQ: {{ $params['moq'] }}
-                                            </span>
-                                            <span class="constraint-tag {{ in_array('order_multiple', $calc['constraints'], true) ? 'constraint-tag-active' : '' }}">
-                                                Mult: &times;{{ $params['order_multiple'] }}
-                                            </span>
-                                            @if($params['capacity'] !== null)
-                                                <span class="constraint-tag {{ in_array('capacity', $calc['constraints'], true) ? 'constraint-tag-active' : '' }}">
-                                                    Cap: {{ number_format((float) $params['capacity'], 0) }}
-                                                </span>
-                                            @endif
-                                            @if($params['shelf_life_days'] !== null)
-                                                <span class="constraint-tag {{ in_array('shelf_life', $calc['constraints'], true) ? 'constraint-tag-active' : '' }}">
-                                                    Shelf: {{ $params['shelf_life_days'] }}d
-                                                </span>
-                                            @endif
-                                        </div>
-                                        @if($isConflict)
-                                            <div class="conflict-banner">
-                                                &#9888; {{ $calc['conflict_flag'] }} (Capped: {{ $calc['capped_quantity'] }} &lt; MOQ {{ $params['moq'] }})
+                                        @php
+                                            $availableSuppliers = !empty($item['available_suppliers']) ? $item['available_suppliers'] : [$supp];
+                                        @endphp
+                                        @if(count($availableSuppliers) > 1)
+                                            <select class="supplier-select"
+                                                    id="supplier_select_{{ $prod['id'] }}"
+                                                    data-product-id="{{ $prod['id'] }}"
+                                                    data-qty="{{ $finalQty }}"
+                                                    onchange="handleSupplierChange({{ $prod['id'] }}, this)">
+                                                @foreach($availableSuppliers as $avail)
+                                                    @php
+                                                        $isSel = ($avail['id'] ?? null) == ($supp['id'] ?? null);
+                                                        $availPrice = (float) ($avail['supply_price'] ?? $unitPrice);
+                                                        $availLead = (int) ($avail['lead_time_days'] ?? $supp['lead_time_days']);
+                                                        $availMoq = (int) ($avail['min_order_qty'] ?? $avail['moq'] ?? $supp['moq']);
+                                                        $availMult = (int) ($avail['order_multiple'] ?? $supp['order_multiple']);
+                                                    @endphp
+                                                    <option value="{{ $avail['id'] }}"
+                                                            data-price="{{ $availPrice }}"
+                                                            data-lead="{{ $availLead }}"
+                                                            data-moq="{{ $availMoq }}"
+                                                            data-mult="{{ $availMult }}"
+                                                            {{ $isSel ? 'selected' : '' }}>
+                                                        {{ $avail['name'] }} @if(!empty($avail['is_preferred']))(Preferred)@endif &bull; ${{ number_format($availPrice, 2) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <div class="supplier-subtext" id="supplier_subtext_{{ $prod['id'] }}">
+                                                {{ $supp['lead_time_days'] }}d lead time &bull; MOQ: {{ $supp['moq'] }} &bull; Mult: &times;{{ $supp['order_multiple'] }}
                                             </div>
+                                        @else
+                                            <div style="font-weight: 700; color: var(--text);">{{ $supp['name'] ?? 'Preferred Supplier' }}</div>
+                                            <div class="supplier-subtext">{{ $supp['lead_time_days'] }}d lead time &bull; MOQ: {{ $supp['moq'] }} &bull; Mult: &times;{{ $supp['order_multiple'] }}</div>
                                         @endif
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--text);">{{ number_format((float) $params['available_stock'], 0) }} units</div>
+                                        @if((float) $params['reserved'] > 0)
+                                            <div class="param-sub">Reserved: {{ number_format((float) $params['reserved'], 0) }}</div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="price-text" id="unit_price_display_{{ $prod['id'] }}">${{ number_format($unitPrice, 2) }}</div>
+                                        <div class="price-sub">per unit</div>
                                     </td>
                                     <td>
                                         @if($isConflict)
-                                            <span class="final-qty-badge final-qty-conflict">0 (Blocked)</span>
+                                            <span class="final-qty-badge final-qty-conflict">0 (Capacity Conflict)</span>
+                                            <div class="conflict-banner">&#9888; MOQ exceeds capacity</div>
                                         @elseif($finalQty > 0)
-                                            <span class="final-qty-badge final-qty-order">{{ number_format($finalQty) }} units</span>
+                                            <span class="final-qty-badge final-qty-order" style="font-size: 0.95rem;">{{ number_format($finalQty) }} units</span>
                                         @else
-                                            <span class="final-qty-badge final-qty-zero">0 units</span>
+                                            <span class="final-qty-badge final-qty-zero">0 units (Stock Sufficient)</span>
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="risk-badge risk-{{ $pred['risk_level'] }}">
-                                            {{ $pred['risk_level'] }}
-                                        </span>
+                                        @if($finalQty > 0)
+                                            <div class="total-price" id="total_price_display_{{ $prod['id'] }}">${{ number_format($totalCost, 2) }}</div>
+                                        @else
+                                            <div id="total_price_display_{{ $prod['id'] }}" style="color: var(--text-muted); font-size: 0.85rem;">$0.00</div>
+                                        @endif
+                                    </td>
+                                    <td style="text-align: right;">
+                                        @if($finalQty > 0 && !$isConflict)
+                                            <form method="POST" action="{{ route('reorder.approve') }}" style="display: inline-block;">
+                                                @csrf
+                                                <input type="hidden" name="product_id" value="{{ $prod['id'] }}">
+                                                <input type="hidden" name="branch_id" value="{{ $selectedBranchId }}">
+                                                <input type="hidden" name="supplier_id" id="hidden_supplier_{{ $prod['id'] }}" value="{{ $supp['id'] ?? '' }}">
+                                                <input type="hidden" name="quantity" value="{{ $finalQty }}">
+                                                <input type="hidden" name="unit_price" id="hidden_price_{{ $prod['id'] }}" value="{{ $unitPrice }}">
+                                                <button type="submit" class="btn-approve">Approve Order</button>
+                                            </form>
+                                        @elseif($isConflict)
+                                            <button type="button" class="btn-approve-disabled" disabled title="Cannot satisfy MOQ within capacity">Blocked</button>
+                                        @else
+                                            <button type="button" class="btn-approve-disabled" disabled>Optimal</button>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -227,15 +226,57 @@
         </div>
     </div>
 
-    <footer class="app-footer">
-        <div class="app-footer-brand">
-            <img src="/images/logo.jpg" alt="IntelliShop">
-            <span>IntelliShop &mdash; AI-Assisted Smart Inventory &amp; Retail Management System</span>
-        </div>
-        <div>
-            &copy; {{ date('Y') }} IntelliShop. Dynamic Replenishment &amp; Safety Stock Module.
+    <footer class="dashboard-footer">
+        <div class="footer-container">
+            <div>
+                <strong>IntelliShop</strong> &mdash; Intelligent Super Shop Management &amp; Decision Support System.
+            </div>
+            <div>
+                <span>&copy; {{ date('Y') }} IntelliShop. All rights reserved.</span>
+            </div>
         </div>
     </footer>
+
+    <script>
+        function handleSupplierChange(productId, selectElem) {
+            const selectedOpt = selectElem.options[selectElem.selectedIndex];
+            if (!selectedOpt) return;
+
+            const price = parseFloat(selectedOpt.getAttribute('data-price')) || 0.0;
+            const lead = selectedOpt.getAttribute('data-lead') || '7';
+            const moq = selectedOpt.getAttribute('data-moq') || '0';
+            const mult = selectedOpt.getAttribute('data-mult') || '1';
+            const qty = parseInt(selectElem.getAttribute('data-qty'), 10) || 0;
+
+            const subtextElem = document.getElementById('supplier_subtext_' + productId);
+            if (subtextElem) {
+                subtextElem.innerHTML = lead + 'd lead time &bull; MOQ: ' + moq + ' &bull; Mult: &times;' + mult;
+            }
+
+            const unitPriceElem = document.getElementById('unit_price_display_' + productId);
+            if (unitPriceElem) {
+                unitPriceElem.textContent = '$' + price.toFixed(2);
+            }
+
+            const totalPriceElem = document.getElementById('total_price_display_' + productId);
+            if (totalPriceElem) {
+                if (qty > 0) {
+                    const total = qty * price;
+                    totalPriceElem.textContent = '$' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                } else {
+                    totalPriceElem.textContent = '$0.00';
+                }
+            }
+
+            const hiddenSupplier = document.getElementById('hidden_supplier_' + productId);
+            if (hiddenSupplier) {
+                hiddenSupplier.value = selectElem.value;
+            }
+            const hiddenPrice = document.getElementById('hidden_price_' + productId);
+            if (hiddenPrice) {
+                hiddenPrice.value = price.toFixed(2);
+            }
+        }
+    </script>
 </body>
 </html>
-

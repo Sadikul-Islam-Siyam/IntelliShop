@@ -300,5 +300,40 @@ class ReorderCalculationTest extends TestCase
             ->assertSee('Target Stock')
             ->assertDontSee('<style', false);
     }
+
+    public function test_purchase_manager_can_approve_reorder_with_selected_supplier(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $purchaseManager = User::query()->where('email', 'purchase@intellishop.com')->firstOrFail();
+        $branch = Branch::query()->firstOrFail();
+        $product = Product::query()->firstOrFail();
+        $supplier = Supplier::query()->firstOrFail();
+
+        $response = $this->actingAs($purchaseManager)->post('/reorders/approve', [
+            'product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'supplier_id' => $supplier->id,
+            'quantity' => 24,
+            'unit_price' => 4.25,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('purchase_orders', [
+            'branch_id' => $branch->id,
+            'supplier_id' => $supplier->id,
+            'status' => 'pending',
+            'total_amount' => 102.00,
+        ]);
+
+        $this->assertDatabaseHas('purchase_order_items', [
+            'product_id' => $product->id,
+            'quantity' => 24,
+            'unit_price' => 4.25,
+            'subtotal' => 102.00,
+        ]);
+    }
 }
 

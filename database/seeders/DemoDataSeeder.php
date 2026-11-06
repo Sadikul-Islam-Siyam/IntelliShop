@@ -149,6 +149,20 @@ class DemoDataSeeder extends Seeder
                     'order_multiple' => 6, 'fulfillment_rate' => 0.96, 'created_at' => now(), 'updated_at' => now()]
             );
 
+            // Also seed other active suppliers as alternative available options for this product
+            foreach ($suppliers as $altKey => $altSupId) {
+                if ($altSupId !== $supplierId) {
+                    $altPrice = round($definition['cost'] * (1.05 + (($id + $altSupId) % 3) * 0.03), 2);
+                    $altLead = 4 + (($id + $altSupId) % 4);
+                    DB::table('product_suppliers')->updateOrInsert(
+                        ['product_id' => $id, 'supplier_id' => $altSupId],
+                        ['supply_price' => $altPrice, 'lead_time_days' => $altLead,
+                            'min_order_qty' => 6, 'quality_score' => 0.88, 'is_preferred' => false,
+                            'order_multiple' => 6, 'fulfillment_rate' => 0.94, 'created_at' => now(), 'updated_at' => now()]
+                    );
+                }
+            }
+
             $products[$key] = $definition + ['id' => $id];
         }
 

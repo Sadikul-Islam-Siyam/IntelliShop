@@ -31,7 +31,6 @@
                 <span class="nav-user-info">
                     <strong>{{ $user->name ?? 'Manager' }}</strong> ({{ $user->role->name ?? 'Manager' }})
                 </span>
-                <a href="{{ route('stock-risk.index') }}" class="btn-nav" style="background: #fee2e2; color: #b91c1c; font-weight: 700;">Stock-Out Risk &rarr;</a>
                 <a href="/dashboard" class="btn-nav">&larr; Dashboard</a>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf

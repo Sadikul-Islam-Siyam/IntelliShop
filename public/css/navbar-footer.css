@@ -1,0 +1,120 @@
+/* IntelliShop - Unified Header and Footer Styles */
+
+body.app-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.app-layout > main {
+    flex: 1 0 auto;
+}
+
+/* Unified Royal Blue Header */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 2rem;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 16px rgba(30, 58, 138, 0.2);
+}
+
+.brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.navbar-logo-sticker {
+    display: inline-flex;
+    align-items: center;
+    background: #ffffff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-logo {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.brand-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-user-info {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.875rem;
+}
+
+.btn-nav {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff !important;
+    padding: 0.45rem 0.95rem;
+    border-radius: 0.5rem;
+    text-decoration: none !important;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.btn-nav:hover {
+    background: rgba(255, 255, 255, 0.24);
+    color: #ffffff !important;
+}
+
+.btn-logout {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    padding: 0.45rem 0.95rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+}
+
+/* Unified Dark Sticky Footer */
+.dashboard-footer {
+    background: #090d16;
+    color: #94a3b8;
+    padding: 1.35rem 2rem;
+    border-top: 1px solid #1e293b;
+    margin-top: auto;
+    font-size: 0.85rem;
+}
+
+.footer-container {
+    max-width: 1320px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
