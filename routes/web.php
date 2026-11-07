@@ -40,8 +40,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
         Route::delete('/branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
     });
-    Route::middleware('role:admin,branch-manager,sales-employee,cashier')->group(function () {
+    Route::middleware('role:admin,super-admin,branch-manager,sales-employee,cashier')->group(function () {
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('/customers/{customer}/history', [\App\Http\Controllers\Web\CustomerHistoryController::class, 'show'])->name('customers.history');
+        Route::get('/history', [\App\Http\Controllers\Web\CustomerHistoryController::class, 'index'])->name('customers.history.index');
     });
     Route::middleware('role:admin,branch-manager,sales-employee')->group(function () {
         Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
@@ -50,8 +52,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
         Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
     });
-    Route::middleware('role:admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
+    Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
         Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+        Route::get('/suppliers/evaluate', [\App\Http\Controllers\Web\SupplierEvaluationController::class, 'index'])->name('suppliers.evaluate');
     });
     Route::middleware('role:admin,purchase-manager')->group(function () {
         Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');
@@ -95,5 +98,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/reorders', [\App\Http\Controllers\Web\ReorderController::class, 'index'])->name('reorder.index');
         Route::get('/reorder', [\App\Http\Controllers\Web\ReorderController::class, 'index'])->name('reorder.show');
         Route::post('/reorders/approve', [\App\Http\Controllers\Web\ReorderController::class, 'approve'])->name('reorder.approve');
+    });
+
+    // Slow-Moving & Overstock Alerts workspace (#50, #51)
+    Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+        Route::get('/overstock', [\App\Http\Controllers\Web\OverstockController::class, 'index'])->name('overstock.index');
+        Route::get('/slow-moving', [\App\Http\Controllers\Web\OverstockController::class, 'index'])->name('overstock.slow-moving');
     });
 });

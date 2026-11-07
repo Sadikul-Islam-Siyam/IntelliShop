@@ -21,7 +21,10 @@
     <main class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div><h1 class="h3 mb-1">Suppliers</h1><p class="text-muted mb-0">Supplier directory and contact details.</p></div>
-            @if ($canManage)<a class="btn btn-primary" href="{{ route('suppliers.create') }}">Add supplier</a>@endif
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-primary" href="{{ route('suppliers.evaluate') }}">SAW Supplier Evaluation</a>
+                @if ($canManage)<a class="btn btn-primary" href="{{ route('suppliers.create') }}">Add supplier</a>@endif
+            </div>
         </div>
         @if (session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
         <form class="mb-3" method="get">

@@ -15,7 +15,7 @@ class ProductSupplier extends Model
         'min_order_qty' => 'integer',
         'order_multiple' => 'integer',
         'quality_score' => 'decimal:2',
-        'fulfillment_rate' => 'decimal:2',
+        'fulfillment_rate' => 'float',
         'is_preferred' => 'boolean',
     ];
 

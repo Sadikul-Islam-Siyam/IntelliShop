@@ -136,6 +136,13 @@ class StockRiskService
             $reorderResult = null;
         }
 
+        // 9c. Evaluate Slow-Moving & Overstock alerts (#50, #51)
+        try {
+            app(\App\Services\OverstockAlertService::class)->runForProduct($productId, $branchId);
+        } catch (\Throwable $e) {
+            Log::warning("Overstock alert evaluation during stock risk run failed for product {$productId}: " . $e->getMessage());
+        }
+
         // 10. Surface recommendation in ai_recommendations table
         $recommendation = $this->syncAiRecommendation(
             $product,
