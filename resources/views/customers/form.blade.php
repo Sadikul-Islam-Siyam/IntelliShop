@@ -27,7 +27,7 @@
             <div class="row"><div class="col-md-6"><label class="form-label mt-3" for="email">Email</label><input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" maxlength="255" value="{{ old('email', $customer->email) }}">@error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror</div><div class="col-md-6"><label class="form-label mt-3" for="phone">Phone</label><input class="form-control" id="phone" name="phone" maxlength="20" value="{{ old('phone', $customer->phone) }}"></div></div>
             <label class="form-label mt-3" for="address">Address</label><input class="form-control" id="address" name="address" maxlength="255" value="{{ old('address', $customer->address) }}">
             <label class="form-label mt-3" for="segment">Segment</label><input class="form-control @error('segment') is-invalid @enderror" id="segment" name="segment" maxlength="50" value="{{ old('segment', $customer->segment) }}" placeholder="Enter a customer segment">@error('segment')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            @if($customer->exists)<p class="small text-muted mt-3 mb-0">Loyalty points: {{ number_format($customer->loyalty_points) }}. Points are managed by the sales workflow.</p>@endif
+            @if($customer->exists)<p class="small text-muted mt-3 mb-0">Loyalty points: {{ number_format($customer->loyalty_points) }}. Points are managed by the sales workflow. <a href="{{ route('customers.history', $customer) }}">View Purchase History &rarr;</a></p>@endif
             <div class="mt-4"><button class="btn btn-primary">Save customer</button><a class="btn btn-outline-secondary" href="{{ route('customers.index') }}">Cancel</a></div>
         </form>
     </main>

@@ -49,6 +49,24 @@ def _register_reorder_handler() -> None:
         pass
 
 
+def _register_supplier_evaluate_handler() -> None:
+    """Registers the supplier evaluation (eligibility + SAW + context weights) handler."""
+    try:
+        from analytics.supplier_scoring import handle_supplier_evaluate_request  # type: ignore
+        register_post_handler("/suppliers/evaluate", handle_supplier_evaluate_request)
+    except ImportError:
+        pass
+
+
+def _register_overstock_handler() -> None:
+    """Registers the slow-moving and overstock detection handler."""
+    try:
+        from analytics.slow_moving import handle_overstock_request  # type: ignore
+        register_post_handler("/overstock/run", handle_overstock_request)
+    except ImportError:
+        pass
+
+
 def _register_forecast_handlers() -> None:
     """Registers the forecasting handlers when the model package is available."""
     try:
@@ -127,6 +145,12 @@ def dispatch_request(
 
         if parsed_path == "/reorder" and parsed_path not in _POST_HANDLERS:
             _register_reorder_handler()
+
+        if parsed_path == "/suppliers/evaluate" and parsed_path not in _POST_HANDLERS:
+            _register_supplier_evaluate_handler()
+
+        if parsed_path == "/overstock/run" and parsed_path not in _POST_HANDLERS:
+            _register_overstock_handler()
 
         if parsed_path in _POST_HANDLERS:
             return _POST_HANDLERS[parsed_path](payload)

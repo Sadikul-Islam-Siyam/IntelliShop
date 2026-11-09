@@ -48,8 +48,9 @@ Route::prefix('v1')->group(function () {
             Route::patch('branches/{branch}', [BranchController::class, 'update']);
             Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('api.v1.branches.destroy');
         });
-        Route::middleware('role:admin,branch-manager,sales-employee,cashier')->group(function () {
+        Route::middleware('role:admin,super-admin,branch-manager,sales-employee,cashier')->group(function () {
             Route::get('customers', [CustomerController::class, 'index'])->name('api.v1.customers.index');
+            Route::get('customers/{customer}/history', [\App\Http\Controllers\Api\V1\CustomerHistoryController::class, 'show'])->name('api.v1.customers.history');
             Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('api.v1.customers.show');
         });
         Route::middleware('role:admin,branch-manager,sales-employee')->group(function () {
@@ -57,6 +58,13 @@ Route::prefix('v1')->group(function () {
             Route::put('customers/{customer}', [CustomerController::class, 'update'])->name('api.v1.customers.update');
             Route::patch('customers/{customer}', [CustomerController::class, 'update']);
             Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('api.v1.customers.destroy');
+        });
+
+        // Supplier Evaluation & Fulfillment endpoints (#47, #48, #67, #68)
+        Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
+            Route::get('suppliers/evaluate', [\App\Http\Controllers\Api\V1\SupplierEvaluationController::class, 'index'])->name('api.v1.suppliers.evaluate.index');
+            Route::post('suppliers/evaluate', [\App\Http\Controllers\Api\V1\SupplierEvaluationController::class, 'evaluate'])->name('api.v1.suppliers.evaluate');
+            Route::post('suppliers/fulfillment', [\App\Http\Controllers\Api\V1\SupplierEvaluationController::class, 'recalculateFulfillment'])->name('api.v1.suppliers.fulfillment');
         });
 
         Route::middleware('role:admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
@@ -105,6 +113,12 @@ Route::prefix('v1')->group(function () {
         });
         Route::middleware('role:admin,super-admin,purchase-manager,branch-manager,system-analyst')->group(function () {
             Route::post('reorder/calculate', [\App\Http\Controllers\Api\V1\ReorderController::class, 'calculate'])->name('api.v1.reorder.calculate');
+        });
+
+        // Slow-Moving & Overstock Detection endpoints (#50, #51)
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+            Route::post('overstock/run', [\App\Http\Controllers\Api\V1\OverstockController::class, 'run'])->name('api.v1.overstock.run');
+            Route::get('overstock/alerts', [\App\Http\Controllers\Api\V1\OverstockController::class, 'alerts'])->name('api.v1.overstock.alerts');
         });
     });
 

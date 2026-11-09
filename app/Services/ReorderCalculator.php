@@ -11,7 +11,7 @@ use App\Models\ModelRun;
 use App\Models\Product;
 use App\Models\ProductSupplier;
 use App\Models\PurchaseOrderItem;
-use App\Models\SalesItem;
+use App\Models\SaleItem;
 use App\Models\StockPrediction;
 use App\Models\SystemSetting;
 use App\Services\Analytics\DemandForecastService;
@@ -750,10 +750,10 @@ class ReorderCalculator
 
         // 2. Fallback: compute sample standard deviation from recent daily sales history
         $historyStart = Carbon::today()->subDays(30)->toDateString();
-        $dailySales = SalesItem::query()
-            ->selectRaw('DATE(sales.sale_date) as day, SUM(sales_items.quantity) as total_qty')
-            ->join('sales', 'sales.id', '=', 'sales_items.sale_id')
-            ->where('sales_items.product_id', $productId)
+        $dailySales = SaleItem::query()
+            ->selectRaw('DATE(sales.sale_date) as day, SUM(sale_items.quantity) as total_qty')
+            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->where('sale_items.product_id', $productId)
             ->where('sales.branch_id', $branchId)
             ->where('sales.status', 'completed')
             ->whereDate('sales.sale_date', '>=', $historyStart)
