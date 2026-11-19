@@ -46,24 +46,17 @@ class AppServiceProvider extends ServiceProvider
                     // Fall back to defaults
                 }
 
-                $url = "http://{$host}:{$port}";
+                // If served on 0.0.0.0 or wildcard/empty (typical in Docker containers),
+                // browsers cannot open 0.0.0.0 on macOS/Windows (fails with invalid address).
+                // Resolve to localhost for a clickable, working link.
+                $browserHost = in_array($host, ['0.0.0.0', '::', '0', '']) ? 'localhost' : $host;
+                $url = "http://{$browserHost}:{$port}";
 
                 $event->output->writeln([
                     '',
                     '  <fg=cyan;options=bold>======================================================================</>',
-                    "  <fg=green;options=bold>🛒  IntelliShop Super Shop & Decision Support System is running!</>",
+                    "  <fg=green;options=bold>🛒  IntelliShop running on:</> <fg=bright-cyan;options=bold,underscore>{$url}</>",
                     '  <fg=cyan;options=bold>======================================================================</>',
-                    "  <fg=yellow;options=bold>➜</>  Application Link:     <fg=bright-cyan;options=bold,underscore>{$url}</>",
-                    "  <fg=yellow;options=bold>➜</>  Login Portal:         <fg=bright-blue;options=underscore>{$url}/login</>",
-                    "  <fg=yellow;options=bold>➜</>  Role Dashboard:       <fg=bright-blue;options=underscore>{$url}/dashboard</>",
-                    "  <fg=yellow;options=bold>➜</>  POS Terminal:         <fg=bright-blue;options=underscore>{$url}/pos</>",
-                    "  <fg=yellow;options=bold>➜</>  Replenishment Orders: <fg=bright-blue;options=underscore>{$url}/reorders</>",
-                    "  <fg=yellow;options=bold>➜</>  Stock-Out Risk:       <fg=bright-blue;options=underscore>{$url}/stock-risk</>",
-                    "  <fg=yellow;options=bold>➜</>  Demand Forecasting:   <fg=bright-blue;options=underscore>{$url}/forecasting</>",
-                    "  <fg=yellow;options=bold>➜</>  Supplier Rankings:    <fg=bright-blue;options=underscore>{$url}/suppliers/ranking</>",
-                    "  <fg=yellow;options=bold>➜</>  Promotions Engine:    <fg=bright-blue;options=underscore>{$url}/promotions</>",
-                    '  <fg=cyan;options=bold>======================================================================</>',
-                    '  <fg=gray>Press Ctrl+C to stop the server</>',
                     '',
                 ]);
             }
