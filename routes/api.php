@@ -38,6 +38,13 @@ Route::prefix('v1')->group(function () {
         // User management CRUD
         Route::apiResource('users', UserController::class)->names('api.v1.users');
 
+        Route::middleware('role:admin,super-admin,branch-manager,inventory-manager')->group(function () {
+            Route::post('markdown/run', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'run'])->name('api.v1.markdown.run');
+            Route::get('markdown/recommendations', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'index'])->name('api.v1.markdown.index');
+            Route::post('markdown/{recommendation}/approve', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'approve'])->name('api.v1.markdown.approve');
+            Route::post('markdown/{recommendation}/reject', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'reject'])->name('api.v1.markdown.reject');
+        });
+
         Route::middleware('role:admin,branch-manager')->group(function () {
             Route::get('branches', [BranchController::class, 'index'])->name('api.v1.branches.index');
             Route::get('branches/{branch}', [BranchController::class, 'show'])->name('api.v1.branches.show');
