@@ -52,6 +52,8 @@ Route::prefix('v1')->group(function () {
             Route::get('customers', [CustomerController::class, 'index'])->name('api.v1.customers.index');
             Route::get('customers/{customer}/history', [\App\Http\Controllers\Api\V1\CustomerHistoryController::class, 'show'])->name('api.v1.customers.history');
             Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('api.v1.customers.show');
+            Route::get('promotions', [\App\Http\Controllers\Api\V1\PromotionController::class, 'index'])->name('api.v1.promotions.index');
+            Route::post('promotions/send', [\App\Http\Controllers\Api\V1\PromotionController::class, 'send'])->name('api.v1.promotions.send');
         });
         Route::middleware('role:admin,branch-manager,sales-employee')->group(function () {
             Route::post('customers', [CustomerController::class, 'store'])->name('api.v1.customers.store');

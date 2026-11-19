@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Contracts\AnalyticsClient as AnalyticsClientContract;
 use App\Contracts\SettingsService as SettingsServiceContract;
+use App\Models\Sale;
+use App\Observers\SaleObserver;
 use App\Services\Analytics\HttpAnalyticsClient;
 use App\Services\DatabaseSettingsService;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +26,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Sale::observe(SaleObserver::class);
     }
 }

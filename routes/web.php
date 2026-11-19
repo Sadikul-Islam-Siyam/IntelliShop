@@ -44,6 +44,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::get('/customers/{customer}/history', [\App\Http\Controllers\Web\CustomerHistoryController::class, 'show'])->name('customers.history');
         Route::get('/history', [\App\Http\Controllers\Web\CustomerHistoryController::class, 'index'])->name('customers.history.index');
+        Route::get('/promotions', [\App\Http\Controllers\Web\PromotionController::class, 'index'])->name('promotions.index');
+        Route::post('/promotions/send', [\App\Http\Controllers\Web\PromotionController::class, 'send'])->name('promotions.send');
     });
     Route::middleware('role:admin,branch-manager,sales-employee')->group(function () {
         Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
