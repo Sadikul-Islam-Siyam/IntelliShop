@@ -493,8 +493,7 @@ class SupplierEvaluationService
             $fulfillmentRate = $record->fulfillment_rate;
             if ($fulfillmentRate === null) {
                 $fulfillmentRate = $this->fulfillmentCalculator->calculateForProductSupplier(
-                    $productId,
-                    (int) $record->supplier_id
+                    $record
                 );
             }
 

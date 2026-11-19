@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
         Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
         Route::get('/suppliers/evaluate', [\App\Http\Controllers\Web\SupplierEvaluationController::class, 'index'])->name('suppliers.evaluate');
+        Route::get('/suppliers/ranking', [\App\Http\Controllers\Web\SupplierEvaluationController::class, 'index'])->name('suppliers.ranking');
     });
     Route::middleware('role:admin,purchase-manager')->group(function () {
         Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');

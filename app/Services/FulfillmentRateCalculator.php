@@ -21,11 +21,27 @@ class FulfillmentRateCalculator
      *   If no order history exists in the window -> neutral value (0.9000).
      */
     public function calculateForProductSupplier(
-        ProductSupplier $productSupplier,
-        ?int $windowDays = null,
-        float $neutralRate = self::NEUTRAL_FULFILLMENT_RATE
+        ProductSupplier|int $productSupplier,
+        $windowDaysOrSupplierId = null,
+        $neutralRateOrWindowDays = null
     ): float {
-        $days = $windowDays ?? $this->resolveWindowDays();
+        if (is_int($productSupplier)) {
+            $productId = $productSupplier;
+            $supplierId = (int) $windowDaysOrSupplierId;
+            $windowDays = is_int($neutralRateOrWindowDays) ? $neutralRateOrWindowDays : null;
+            $record = ProductSupplier::where('product_id', $productId)
+                ->where('supplier_id', $supplierId)
+                ->first();
+
+            if ($record) {
+                return $this->calculateForProductSupplier($record, $windowDays);
+            }
+
+            return self::NEUTRAL_FULFILLMENT_RATE;
+        }
+
+        $days = (is_int($windowDaysOrSupplierId) ? $windowDaysOrSupplierId : null) ?? $this->resolveWindowDays();
+        $neutralRate = (is_numeric($neutralRateOrWindowDays) ? (float) $neutralRateOrWindowDays : self::NEUTRAL_FULFILLMENT_RATE);
         $cutoffDate = Carbon::today()->subDays($days)->toDateString();
 
         $orderItems = PurchaseOrderItem::query()
