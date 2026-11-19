@@ -65,6 +65,8 @@ Route::prefix('v1')->group(function () {
 
         // Supplier Evaluation & Fulfillment endpoints (#47, #48, #67, #68)
         Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
+            Route::get('suppliers/ranking', [\App\Http\Controllers\Api\V1\SupplierRankingController::class, 'index'])->name('api.v1.suppliers.ranking.index');
+            Route::post('suppliers/ranking/override', [\App\Http\Controllers\Api\V1\SupplierRankingController::class, 'override'])->name('api.v1.suppliers.ranking.override');
             Route::get('suppliers/evaluate', [\App\Http\Controllers\Api\V1\SupplierEvaluationController::class, 'index'])->name('api.v1.suppliers.evaluate.index');
             Route::post('suppliers/evaluate', [\App\Http\Controllers\Api\V1\SupplierEvaluationController::class, 'evaluate'])->name('api.v1.suppliers.evaluate');
             Route::post('suppliers/fulfillment', [\App\Http\Controllers\Api\V1\SupplierEvaluationController::class, 'recalculateFulfillment'])->name('api.v1.suppliers.fulfillment');
