@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Services\DashboardWidgetService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -11,6 +12,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected DashboardWidgetService $widgetService
+    ) {}
+
     /**
      * Retrieve role dashboard metadata for the currently authenticated user.
      * Endpoint: GET /api/v1/dashboard
@@ -19,7 +24,6 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // Reject request if user is not authenticated
         if (!$user) {
             return response()->json([
                 'error' => [
@@ -35,12 +39,20 @@ class DashboardController extends Controller
         $dashboards = config('permissions.role_dashboards', []);
         $roleConfig = $dashboards[$normalizedSlug] ?? null;
 
+        $widgets = $this->widgetService->getWidgetsForRole($user, $normalizedSlug);
+
         return response()->json([
             'data' => [
                 'user' => new UserResource($user),
                 'role' => $roleName,
                 'role_slug' => $normalizedSlug,
                 'dashboard_route' => $redirectMap[$roleName] ?? '/dashboard',
+                'branch' => $user->branch ? [
+                    'id' => $user->branch->id,
+                    'name' => $user->branch->name,
+                    'address' => $user->branch->address,
+                ] : null,
+                'widgets' => $widgets,
                 'permissions' => $user->getPermissions(),
                 'modules' => $roleConfig['modules'] ?? [],
                 'meta' => [
@@ -53,14 +65,13 @@ class DashboardController extends Controller
     }
 
     /**
-     * Retrieve metadata for a specific role dashboard.
+     * Retrieve metadata and widgets for a specific role dashboard.
      * Endpoint: GET /api/v1/dashboard/{role}
      */
     public function show(Request $request, string $role): JsonResponse
     {
         $user = $request->user();
 
-        // Reject request if user is not authenticated
         if (!$user) {
             return response()->json([
                 'error' => [
@@ -73,7 +84,6 @@ class DashboardController extends Controller
         $normalizedSlug = Str::kebab(str_replace('_', '-', $role));
         $dashboards = config('permissions.role_dashboards', []);
 
-        // Validate that requested dashboard exists
         if (!isset($dashboards[$normalizedSlug])) {
             return response()->json([
                 'error' => [
@@ -86,7 +96,7 @@ class DashboardController extends Controller
         $roleConfig = $dashboards[$normalizedSlug];
 
         // Check whether user possesses the required role
-        if (!$user->hasRole($roleConfig['role_name']) && !$user->hasRole($normalizedSlug)) {
+        if (!$user->isAdmin() && !$user->hasRole($roleConfig['role_name']) && !$user->hasRole($normalizedSlug)) {
             return response()->json([
                 'error' => [
                     'code' => 'FORBIDDEN',
@@ -95,11 +105,19 @@ class DashboardController extends Controller
             ], Response::HTTP_FORBIDDEN);
         }
 
+        $widgets = $this->widgetService->getWidgetsForRole($user, $normalizedSlug);
+
         return response()->json([
             'data' => [
                 'role' => $roleConfig['role_name'],
                 'role_slug' => $normalizedSlug,
                 'dashboard_route' => "/dashboard/{$normalizedSlug}",
+                'branch' => $user->branch ? [
+                    'id' => $user->branch->id,
+                    'name' => $user->branch->name,
+                    'address' => $user->branch->address,
+                ] : null,
+                'widgets' => $widgets,
                 'modules' => $roleConfig['modules'],
                 'meta' => [
                     'title' => $roleConfig['title'],

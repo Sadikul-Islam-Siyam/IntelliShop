@@ -47,6 +47,25 @@
             </p>
         </div>
 
+        @if(!empty($widgets))
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                @foreach($widgets as $widget)
+                    <div style="background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                            {{ $widget['label'] }}
+                        </div>
+                        <div style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-top: 0.5rem;">
+                            @if(($widget['format'] ?? '') === 'currency')
+                                ${{ number_format($widget['value'], 2) }}
+                            @else
+                                {{ number_format($widget['value']) }}
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
         @if(isset($roleConfig))
             <div class="card">
                 <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">

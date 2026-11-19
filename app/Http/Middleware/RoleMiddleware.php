@@ -56,8 +56,8 @@ class RoleMiddleware
             return $next($request);
         }
 
-        // Authorize request if user possesses any of the required roles
-        if ($user && $user->hasRole($allowedRoles)) {
+        // Authorize request if user is admin or possesses any of the required roles
+        if ($user && ($user->isAdmin() || $user->hasRole($allowedRoles))) {
             return $next($request);
         }
 

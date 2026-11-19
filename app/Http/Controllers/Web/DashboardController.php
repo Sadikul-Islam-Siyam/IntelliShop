@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Services\DashboardWidgetService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -11,6 +12,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected DashboardWidgetService $widgetService
+    ) {}
+
     /**
      * Redirect authenticated user to their role-specific landing dashboard.
      */
@@ -30,6 +35,7 @@ class DashboardController extends Controller
         return view('dashboard', [
             'user' => $user,
             'roleConfig' => null,
+            'widgets' => [],
         ]);
     }
 
@@ -48,15 +54,18 @@ class DashboardController extends Controller
 
         $roleConfig = $dashboards[$normalizedSlug];
 
-        if (!$user->hasRole($roleConfig['role_name']) && !$user->hasRole($normalizedSlug)) {
+        if (!$user->isAdmin() && !$user->hasRole($roleConfig['role_name']) && !$user->hasRole($normalizedSlug)) {
             abort(Response::HTTP_FORBIDDEN, 'Access denied. You do not have permission to access this dashboard.');
         }
+
+        $widgets = $this->widgetService->getWidgetsForRole($user, $normalizedSlug);
 
         return view('dashboard', [
             'user' => $user,
             'roleConfig' => $roleConfig,
             'roleSlug' => $normalizedSlug,
             'permissions' => $user->getPermissions(),
+            'widgets' => $widgets,
         ]);
     }
 }
