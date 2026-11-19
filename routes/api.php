@@ -51,6 +51,8 @@ Route::prefix('v1')->group(function () {
             Route::get('markdown/recommendations', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'index'])->name('api.v1.markdown.index');
             Route::post('markdown/{recommendation}/approve', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'approve'])->name('api.v1.markdown.approve');
             Route::post('markdown/{recommendation}/reject', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'reject'])->name('api.v1.markdown.reject');
+            Route::post('phantom/run', [\App\Http\Controllers\Api\V1\PhantomInventoryController::class, 'run'])->name('api.v1.phantom.run');
+            Route::get('phantom/candidates', [\App\Http\Controllers\Api\V1\PhantomInventoryController::class, 'candidates'])->name('api.v1.phantom.candidates');
         });
 
         Route::middleware('role:admin,branch-manager')->group(function () {
