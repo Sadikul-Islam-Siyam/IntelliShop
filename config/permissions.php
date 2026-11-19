@@ -452,6 +452,7 @@ return [
             'modules' => [
                 ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
                 ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
+                ['name' => 'Suppliers', 'description' => 'Manage supplier profiles, contact credentials, product terms, and performance evaluations.', 'route' => '/suppliers', 'icon' => 'suppliers'],
                 ['name' => 'Demand Forecasting', 'description' => 'Statistical demand forecasting pipeline, backtest metrics, and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],
                 ['name' => 'Stock-Out Risk', 'description' => 'Timeline days-of-cover projections and supplier risk classifications.', 'route' => '/stock-risk', 'icon' => 'risk'],
                 ['name' => 'Dynamic Replenishment', 'description' => 'Automated Safety Stock (SS), Reorder Point (ROP), and constraint-aware purchase advice.', 'route' => '/reorders', 'icon' => 'reorder'],
@@ -467,6 +468,7 @@ return [
             'modules' => [
                 ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
                 ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
+                ['name' => 'Suppliers', 'description' => 'Manage supplier profiles, contact credentials, product terms, and performance evaluations.', 'route' => '/suppliers', 'icon' => 'suppliers'],
                 ['name' => 'Demand Forecasting', 'description' => 'Statistical demand forecasting pipeline, backtest metrics, and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],
                 ['name' => 'Stock-Out Risk', 'description' => 'Timeline days-of-cover projections and supplier risk classifications.', 'route' => '/stock-risk', 'icon' => 'risk'],
                 ['name' => 'Dynamic Replenishment', 'description' => 'Automated Safety Stock (SS), Reorder Point (ROP), and constraint-aware purchase advice.', 'route' => '/reorders', 'icon' => 'reorder'],
@@ -481,6 +483,7 @@ return [
             'description' => 'Branch-scoped oversight of daily sales, local inventory, staff performance, and stock transfers.',
             'modules' => [
                 ['name' => 'Branch Inventory', 'description' => 'Monitor local product balances and safety stocks.', 'route' => '/inventory', 'icon' => 'inventory'],
+                ['name' => 'Suppliers', 'description' => 'View supplier directory, catalogs, and contact details.', 'route' => '/suppliers', 'icon' => 'suppliers'],
                 ['name' => 'Demand Forecasting', 'description' => 'Inspect statistical product-branch demand forecasts and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],
                 ['name' => 'Stock-Out Risk', 'description' => 'Timeline days-of-cover projections and supplier risk classifications.', 'route' => '/stock-risk', 'icon' => 'risk'],
                 ['name' => 'Dynamic Replenishment', 'description' => 'Automated Safety Stock (SS), Reorder Point (ROP), and replenishment advice.', 'route' => '/reorders', 'icon' => 'reorder'],
@@ -497,6 +500,7 @@ return [
             'modules' => [
                 ['name' => 'Product Catalog', 'description' => 'Manage categories, brands, SKUs, and retail pricing.', 'route' => '/products', 'icon' => 'products'],
                 ['name' => 'Stock Balances', 'description' => 'Perform stock adjustments and batch tracking.', 'route' => '/inventory', 'icon' => 'stock'],
+                ['name' => 'Suppliers', 'description' => 'View supplier directory, product terms, and contact credentials.', 'route' => '/suppliers', 'icon' => 'suppliers'],
                 ['name' => 'Stock-Out Risk', 'description' => 'Timeline days-of-cover projections and supplier risk classifications.', 'route' => '/stock-risk', 'icon' => 'risk'],
                 ['name' => 'Dynamic Replenishment', 'description' => 'Automated Safety Stock (SS), Reorder Point (ROP), and replenishment advice.', 'route' => '/reorders', 'icon' => 'reorder'],
                 ['name' => 'Stock-Out Alerts', 'description' => 'Inspect low-stock warnings and reorder triggers.', 'route' => '/alerts', 'icon' => 'alerts'],
@@ -533,7 +537,7 @@ return [
             'badge' => 'Procurement',
             'description' => 'Supplier relationship management, purchasing orders, replenishment quotes, and vendor performance.',
             'modules' => [
-                ['name' => 'Supplier Registry', 'description' => 'Manage vendor profiles and contact credentials.', 'route' => '/suppliers', 'icon' => 'suppliers'],
+                ['name' => 'Suppliers', 'description' => 'Manage supplier profiles, vendor evaluations, and ranking scorecards.', 'route' => '/suppliers', 'icon' => 'suppliers'],
                 ['name' => 'Purchase Orders', 'description' => 'Generate and dispatch draft purchase orders.', 'route' => '/purchase-orders', 'icon' => 'orders'],
                 ['name' => 'Contract Terms', 'description' => 'Maintain vendor MOQs, lead times, and unit costs.', 'route' => '/supplier-terms', 'icon' => 'terms'],
                 ['name' => 'Dynamic Replenishment', 'description' => 'Review automated stock replenishment advice and optimal order quantities.', 'route' => '/reorders', 'icon' => 'reorder'],
@@ -545,6 +549,7 @@ return [
             'badge' => 'AI & Decision Support',
             'description' => 'Predictive demand forecasting, sales anomaly detection, market basket affinity, and natural-language queries.',
             'modules' => [
+                ['name' => 'Suppliers', 'description' => 'Inspect supplier directory, fulfillment rates, and multi-criteria evaluations.', 'route' => '/suppliers', 'icon' => 'suppliers'],
                 ['name' => 'Demand Forecasting', 'description' => 'Inspect statistical equation sales forecast projections and backtests.', 'route' => '/forecasting', 'icon' => 'forecast'],
                 ['name' => 'Stock-Out Risk', 'description' => 'Timeline days-of-cover projections and supplier risk classifications.', 'route' => '/stock-risk', 'icon' => 'risk'],
                 ['name' => 'Dynamic Replenishment', 'description' => 'Automated Safety Stock (SS), Reorder Point (ROP), and constraint-aware purchase advice.', 'route' => '/reorders', 'icon' => 'reorder'],
