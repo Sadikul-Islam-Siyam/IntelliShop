@@ -42,6 +42,8 @@ Route::prefix('v1')->group(function () {
             Route::post('anomalies/run', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'run'])->name('api.v1.anomalies.run');
             Route::get('anomalies', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'index'])->name('api.v1.anomalies.index');
             Route::post('anomalies/{anomaly}/review', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'review'])->name('api.v1.anomalies.review');
+            Route::post('basket/run', [\App\Http\Controllers\Api\V1\MarketBasketController::class, 'run'])->name('api.v1.basket.run');
+            Route::get('basket/rules', [\App\Http\Controllers\Api\V1\MarketBasketController::class, 'index'])->name('api.v1.basket.rules');
         });
 
         Route::middleware('role:admin,super-admin,branch-manager,inventory-manager')->group(function () {
@@ -62,6 +64,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('api.v1.branches.destroy');
         });
         Route::middleware('role:admin,super-admin,branch-manager,sales-employee,cashier')->group(function () {
+            Route::get('crosssell/{product}', [\App\Http\Controllers\Api\V1\MarketBasketController::class, 'crossSell'])->name('api.v1.crosssell');
             Route::get('pos/substitutes/{product}', [\App\Http\Controllers\Api\V1\ProductSubstitutionController::class, 'show'])->name('api.v1.pos.substitutes');
             Route::get('customers', [CustomerController::class, 'index'])->name('api.v1.customers.index');
             Route::get('customers/{customer}/history', [\App\Http\Controllers\Api\V1\CustomerHistoryController::class, 'show'])->name('api.v1.customers.history');
