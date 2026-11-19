@@ -38,6 +38,12 @@ Route::prefix('v1')->group(function () {
         // User management CRUD
         Route::apiResource('users', UserController::class)->names('api.v1.users');
 
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager')->group(function () {
+            Route::post('anomalies/run', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'run'])->name('api.v1.anomalies.run');
+            Route::get('anomalies', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'index'])->name('api.v1.anomalies.index');
+            Route::post('anomalies/{anomaly}/review', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'review'])->name('api.v1.anomalies.review');
+        });
+
         Route::middleware('role:admin,super-admin,branch-manager,inventory-manager')->group(function () {
             Route::post('markdown/run', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'run'])->name('api.v1.markdown.run');
             Route::get('markdown/recommendations', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'index'])->name('api.v1.markdown.index');
