@@ -40,11 +40,27 @@
     <main class="main-content">
         <div class="card">
             <div class="workspace-header">
-                <h2>Welcome to IntelliShop, {{ $user->name ?? 'User' }}!</h2>
+                <div>
+                    <h2>Welcome to IntelliShop, {{ $user->name ?? 'User' }}!</h2>
+                    <p class="welcome-subtitle">
+                        Account Status: <span class="status-active">{{ ucfirst($user->status ?? 'active') }}</span>
+                    </p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                    <a href="{{ route('suppliers.index') }}" class="workspace-badge" style="text-decoration: none; background: #e0f2fe; color: #0369a1; font-weight: 700; border: 1px solid #bae6fd;">
+                        Suppliers &rarr;
+                    </a>
+                    <a href="{{ route('reorder.index') }}" class="workspace-badge" style="text-decoration: none; background: #e0e7ff; color: #4338ca; font-weight: 700; border: 1px solid #c7d2fe;">
+                        Replenishment &rarr;
+                    </a>
+                    <a href="{{ route('stock-risk.index') }}" class="workspace-badge" style="text-decoration: none; background: #fee2e2; color: #b91c1c; font-weight: 700; border: 1px solid #fecaca;">
+                        Stock-Out Risk &rarr;
+                    </a>
+                    <a href="{{ route('forecasts.index') }}" class="workspace-badge" style="text-decoration: none; background: #f1f5f9; color: #334155; font-weight: 700; border: 1px solid #e2e8f0;">
+                        Demand Forecasts &rarr;
+                    </a>
+                </div>
             </div>
-            <p class="welcome-subtitle">
-                Account Status: <span class="status-active">{{ ucfirst($user->status ?? 'active') }}</span>
-            </p>
         </div>
 
         @if(!empty($widgets))
@@ -84,6 +100,31 @@
                             <div class="module-desc">{{ $module['description'] }}</div>
                         </a>
                     @endforeach
+                </div>
+            </div>
+        @else
+            <div class="card">
+                <div class="dashboard-section-title">
+                    Operational Modules & Quick Actions
+                </div>
+
+                <div class="modules-grid">
+                    <a href="{{ route('suppliers.index') }}" class="module-card">
+                        <div class="module-title">Suppliers</div>
+                        <div class="module-desc">Manage supplier profiles, contact credentials, product terms, and performance evaluations.</div>
+                    </a>
+                    <a href="{{ route('reorder.index') }}" class="module-card">
+                        <div class="module-title">Dynamic Replenishment</div>
+                        <div class="module-desc">Automated Safety Stock (SS), Reorder Point (ROP), and constraint-aware replenishment advice.</div>
+                    </a>
+                    <a href="{{ route('stock-risk.index') }}" class="module-card">
+                        <div class="module-title">Stock-Out Risk</div>
+                        <div class="module-desc">Timeline days-of-cover projections and supplier risk classifications.</div>
+                    </a>
+                    <a href="{{ route('forecasts.index') }}" class="module-card">
+                        <div class="module-title">Demand Forecasting</div>
+                        <div class="module-desc">Statistical demand forecasting pipeline, backtest metrics, and prediction intervals.</div>
+                    </a>
                 </div>
             </div>
         @endif
