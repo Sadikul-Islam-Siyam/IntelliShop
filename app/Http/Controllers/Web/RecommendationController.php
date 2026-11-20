@@ -56,4 +56,14 @@ class RecommendationController extends Controller
         return redirect()->route('recommendations.index', ['branch_id' => $branchId])
             ->with('success', "Forward-chaining recommendation engine executed. {$recs->count()} recommendations ranked.");
     }
+
+    public function review(Request $request, int $id): RedirectResponse
+    {
+        $reviewController = app(\App\Http\Controllers\Api\V1\RecommendationReviewController::class);
+        $response = $reviewController->review($request, $id);
+        $data = $response->getData(true);
+        $msg = $data['message'] ?? 'Recommendation review completed.';
+
+        return redirect()->back()->with('success', $msg);
+    }
 }

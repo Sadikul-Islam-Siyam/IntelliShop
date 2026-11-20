@@ -51,6 +51,7 @@
                             <th>Type</th>
                             <th>Explainable Rationale &amp; Rule Factors</th>
                             <th>Status</th>
+                            <th style="text-align: right;">Review Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -85,10 +86,28 @@
                                     @endif
                                 </td>
                                 <td><span class="is-badge {{ $stClass }}">{{ ucfirst($rec->status) }}</span></td>
+                                <td style="text-align: right; white-space: nowrap;">
+                                    @if(in_array(strtolower((string) $rec->status), ['open', 'pending'], true))
+                                        <div style="display: inline-flex; gap: 0.4rem;">
+                                            <form method="POST" action="{{ route('recommendations.review', $rec->id) }}" style="display: inline;">
+                                                @csrf
+                                                <input type="hidden" name="action" value="approve">
+                                                <button type="submit" style="padding: 0.3rem 0.65rem; background: #16a34a; color: #fff; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.8rem;">Approve</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('recommendations.review', $rec->id) }}" style="display: inline;">
+                                                @csrf
+                                                <input type="hidden" name="action" value="reject">
+                                                <button type="submit" style="padding: 0.3rem 0.65rem; background: #dc2626; color: #fff; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.8rem;">Reject</button>
+                                            </form>
+                                        </div>
+                                    @else
+                                        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Reviewed</span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="is-empty-state">
+                                <td colspan="6" class="is-empty-state">
                                     <div class="is-empty-state-title">No open recommendations in the queue</div>
                                     <p class="is-empty-state-desc">Click <strong>Run Expert Rules</strong> above to evaluate current stock, markdown, and anomaly signals.</p>
                                 </td>
