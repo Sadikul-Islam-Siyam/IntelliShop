@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(SettingsServiceContract::class, DatabaseSettingsService::class);
         $this->app->bind(AnalyticsClientContract::class, HttpAnalyticsClient::class);
+        $this->app->bind(\App\Contracts\InventoryService::class, \App\Services\InventoryService::class);
     }
 
     /**

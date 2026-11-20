@@ -54,6 +54,11 @@ Route::prefix('v1')->group(function () {
             Route::post('markdown/{recommendation}/reject', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'reject'])->name('api.v1.markdown.reject');
             Route::post('phantom/run', [\App\Http\Controllers\Api\V1\PhantomInventoryController::class, 'run'])->name('api.v1.phantom.run');
             Route::get('phantom/candidates', [\App\Http\Controllers\Api\V1\PhantomInventoryController::class, 'candidates'])->name('api.v1.phantom.candidates');
+            Route::get('cycle-counts', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'index'])->name('api.v1.cycle-counts.index');
+            Route::get('cycle-counts/{id}', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'show'])->name('api.v1.cycle-counts.show');
+            Route::post('cycle-counts/{id}/count', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'recordCount'])->name('api.v1.cycle-counts.count');
+            Route::post('cycle-counts/{id}/approve', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'approve'])->name('api.v1.cycle-counts.approve');
+            Route::post('cycle-counts/{id}/reject', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'reject'])->name('api.v1.cycle-counts.reject');
         });
 
         Route::middleware('role:admin,branch-manager')->group(function () {

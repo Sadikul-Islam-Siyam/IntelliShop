@@ -134,6 +134,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/recommendations/run', [\App\Http\Controllers\Web\RecommendationController::class, 'run'])->name('recommendations.run');
     });
 
+    // Phantom Inventory & Cycle Count Reconciliation (#71)
+    Route::middleware('role:admin,super-admin,branch-manager,inventory-manager')->group(function () {
+        Route::get('/cycle-counts', [\App\Http\Controllers\Web\CycleCountController::class, 'index'])->name('cycle-counts.index');
+        Route::post('/cycle-counts/{id}/count', [\App\Http\Controllers\Web\CycleCountController::class, 'recordCount'])->name('cycle-counts.count');
+        Route::post('/cycle-counts/{id}/approve', [\App\Http\Controllers\Web\CycleCountController::class, 'approve'])->name('cycle-counts.approve');
+        Route::post('/cycle-counts/{id}/reject', [\App\Http\Controllers\Web\CycleCountController::class, 'reject'])->name('cycle-counts.reject');
+    });
+
     // Natural-Language Business Queries workspace (#60)
     Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager,sales-employee')->group(function () {
         Route::get('/nlq', [\App\Http\Controllers\Web\NlqController::class, 'index'])->name('nlq.index');
