@@ -22,15 +22,16 @@
                     <h2>Market Basket Affinity &amp; Cross-Sell Display</h2>
                     <p class="welcome-subtitle">Association rule mining (Support, Confidence, Lift) for POS and product cross-sell widgets.</p>
                 </div>
-                <form method="POST" action="{{ route('market-basket.run') }}">
+                <form method="POST" action="{{ route('market-basket.run') }}" data-async-action data-refresh-target="#market-basket-results" data-success-message="Association rules mined and updated.">
                     @csrf
-                    <button type="submit" style="background: #2563eb; color: #fff; border: none; padding: 0.65rem 1.25rem; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                    <button type="submit" data-loading-text="Mining Rules..." style="background: #2563eb; color: #fff; border: none; padding: 0.65rem 1.25rem; border-radius: 8px; font-weight: 700; cursor: pointer;">
                         Mine Association Rules
                     </button>
                 </form>
             </div>
         </div>
 
+        <div id="market-basket-results" data-async-target>
         <div style="margin-bottom: 1.5rem;">
             @include('partials.cross-sell-widget', ['product' => $selectedProduct, 'crossSellRules' => $crossSellWidgetRules])
         </div>
@@ -61,6 +62,7 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
         </div>
     </main>
     @include('partials.footer')

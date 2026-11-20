@@ -17,6 +17,7 @@ use App\Models\Sale;
 use App\Models\SalesAnomaly;
 use App\Models\Supplier;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardWidgetService
 {
@@ -24,6 +25,18 @@ class DashboardWidgetService
      * Build role-specific and branch-scoped widgets.
      */
     public function getWidgetsForRole(User $user, string $roleSlug): array
+    {
+        if (app()->runningUnitTests()) {
+            return $this->computeWidgetsForRole($user, $roleSlug);
+        }
+
+        $branchKey = $user->branch_id ?? 'all';
+        $cacheKey = "ux:dashboard:widgets:{$roleSlug}:b:{$branchKey}:u:{$user->id}";
+
+        return Cache::remember($cacheKey, now()->addSeconds(60), fn () => $this->computeWidgetsForRole($user, $roleSlug));
+    }
+
+    protected function computeWidgetsForRole(User $user, string $roleSlug): array
     {
         $branchId = $user->branch_id;
 

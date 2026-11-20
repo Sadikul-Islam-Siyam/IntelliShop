@@ -24,19 +24,66 @@
             @if ($canManage)<a class="btn btn-primary" href="{{ route('branches.create') }}">Add branch</a>@endif
         </div>
         @if (session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
-        <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table align-middle mb-0">
-            <thead><tr><th>Name</th><th>Address</th><th>Manager</th><th>Status</th>@if ($canManage)<th class="text-end">Actions</th>@endif</tr></thead>
-            <tbody>
-            @forelse ($branches as $branch)
-                <tr><td class="fw-semibold">{{ $branch->name }}</td><td>{{ $branch->address ?: '—' }}</td><td>{{ $branch->manager?->name ?: 'Unassigned' }}</td>
-                    <td><span class="badge text-bg-{{ $branch->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($branch->status) }}</span></td>
-                    @if ($canManage)<td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ route('branches.edit', $branch) }}">Edit</a>
-                        @if ($branch->status === 'active')<form class="d-inline" method="post" action="{{ route('branches.destroy', $branch) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger" onclick="return confirm('Deactivate this branch?')">Deactivate</button></form>@endif
-                    </td>@endif
-                </tr>
-            @empty<tr><td colspan="5" class="text-center text-muted py-4">No branches found.</td></tr>@endforelse
-            </tbody>
-        </table></div><div class="card-body">{{ $branches->links() }}</div></div>
+        <div class="card border-0 shadow-sm" id="branches-results" data-async-target>
+            <div class="is-table-wrap">
+                <table class="mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Address</th>
+                            <th>Manager</th>
+                            <th>Status</th>
+                            @if ($canManage)<th style="text-align: right;">Actions</th>@endif
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($branches as $branch)
+                            <tr>
+                                <td class="fw-semibold">{{ $branch->name }}</td>
+                                <td>{{ $branch->address ?: '—' }}</td>
+                                <td>{{ $branch->manager?->name ?: 'Unassigned' }}</td>
+                                <td>
+                                    <span class="is-badge {{ $branch->status === 'active' ? 'is-badge-success' : 'is-badge-neutral' }}">
+                                        {{ ucfirst($branch->status) }}
+                                    </span>
+                                </td>
+                                @if ($canManage)
+                                    <td style="text-align: right;">
+                                        <div class="is-actions-group">
+                                            <a class="is-btn is-btn-sm is-btn-info" href="{{ route('branches.edit', $branch) }}">Edit</a>
+                                            @if ($branch->status === 'active')
+                                                <form class="d-inline" method="post" action="{{ route('branches.destroy', $branch) }}" data-async-action data-refresh-target="#branches-results" data-confirm="Deactivate this branch?" data-success-message="Branch deactivated.">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="is-btn is-btn-sm is-btn-danger">Deactivate</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endif
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="is-empty-state">
+                                    <div class="is-empty-state-title">No branches found</div>
+                                    <p class="is-empty-state-desc">Add a supermarket branch to get started.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="is-table-footer">
+                <div>
+                    @if($branches->total() > 0)
+                        Showing <strong>{{ $branches->firstItem() }}</strong>–<strong>{{ $branches->lastItem() }}</strong> of <strong>{{ $branches->total() }}</strong> branches
+                    @else
+                        Showing 0 branches
+                    @endif
+                </div>
+                <div>{{ $branches->links() }}</div>
+            </div>
+        </div>
     </main>
 
     @include('partials.footer')

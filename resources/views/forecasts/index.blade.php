@@ -19,26 +19,7 @@
     <link rel="stylesheet" href="{{ asset('css/forecasts.css') }}">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <a href="/dashboard" class="brand">
-                <div class="navbar-logo-sticker">
-                    <img src="{{ asset('images/logo.jpg') }}" alt="IntelliShop" class="navbar-logo">
-                </div>
-                <span class="brand-name">IntelliShop</span>
-            </a>
-            <div class="nav-actions">
-                <span class="nav-user-info">
-                    <strong>{{ $user->name ?? 'Manager' }}</strong> ({{ $user->role->name ?? 'Manager' }})
-                </span>
-                <a href="/dashboard" class="btn-nav">&larr; Dashboard</a>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-logout">Logout</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    @include('partials.navbar')
 
     <main class="page-container">
         <div class="page-header">
@@ -92,15 +73,6 @@
         </section>
     </main>
 
-    <footer class="dashboard-footer">
-        <div class="footer-container">
-            <div>
-                <strong>IntelliShop</strong> &mdash; Intelligent Super Shop Management &amp; Decision Support System.
-            </div>
-            <div>
-                <span>&copy; {{ date('Y') }} IntelliShop. All rights reserved.</span>
-            </div>
-        </div>
-    </footer>
+    @include('partials.footer')
 </body>
 </html>

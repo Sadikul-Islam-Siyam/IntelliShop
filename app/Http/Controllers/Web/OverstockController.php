@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Services\OverstockAlertService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -30,7 +32,20 @@ class OverstockController extends Controller
         $filterMode = (string) $request->input('filter', 'all');
 
         try {
-            $evaluations = $this->overstockService->runAllForBranch($selectedBranchId);
+            $invStats = DB::table('inventory')
+                ->where('branch_id', $selectedBranchId)
+                ->selectRaw('COUNT(*) as c, COALESCE(SUM(quantity_available), 0) as q')
+                ->first();
+            $freshness = ($invStats->c ?? 0) . ':' . ($invStats->q ?? 0);
+            $cacheKey = "ux:overstock:branch:{$selectedBranchId}:" . md5($freshness);
+
+            if ($request->boolean('refresh') || app()->runningUnitTests()) {
+                Cache::forget($cacheKey);
+            }
+
+            $evaluations = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($selectedBranchId) {
+                return $this->overstockService->runAllForBranch($selectedBranchId);
+            });
         } catch (\Throwable $e) {
             Log::warning('Failed to auto-evaluate overstock & slow-moving items on page load: ' . $e->getMessage());
             $evaluations = [];

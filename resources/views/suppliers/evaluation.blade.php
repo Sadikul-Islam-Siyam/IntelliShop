@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('suppliers.evaluate') }}" class="filter-bar">
+        <form method="GET" action="{{ route('suppliers.evaluate') }}" class="filter-bar" data-async-form data-async-target="#evaluation-results">
             <label for="branch_id" class="text-muted">Branch:</label>
             <select name="branch_id" id="branch_id" class="filter-select">
                 @foreach($branches as $b)
@@ -49,6 +49,7 @@
             <button type="submit" class="btn btn-primary">Evaluate Suppliers</button>
         </form>
 
+        <div id="evaluation-results" data-async-target>
         @if(!empty($evaluation['alert']))
             <div class="alert-banner">
                 <strong>Procurement Alert:</strong> {{ $evaluation['alert']['message'] ?? 'No eligible suppliers found.' }}
@@ -123,18 +124,18 @@
                                     <span class="badge badge-normal">Recommended</span>
                                 @endif
                             </td>
-                            <td>{{ $row['supplier_name'] }}</td>
-                            <td>${{ number_format((float) $row['price'], 2) }}</td>
-                            <td>{{ (int) $row['lead_time_days'] }} days</td>
-                            <td>{{ number_format(((float) $row['fulfillment_rate']) * 100, 1) }}%</td>
-                            <td>MOQ {{ (int) $row['moq'] }} (x{{ (int) ($row['order_multiple'] ?? 1) }})</td>
+                            <td>{{ $row['supplier_name'] ?? $row['name'] ?? ('Supplier #' . ($row['supplier_id'] ?? '')) }}</td>
+                            <td>${{ number_format((float) ($row['price'] ?? 0), 2) }}</td>
+                            <td>{{ (int) ($row['lead_time_days'] ?? 0) }} days</td>
+                            <td>{{ number_format(((float) ($row['fulfillment_rate'] ?? 0)) * 100, 1) }}%</td>
+                            <td>MOQ {{ (int) ($row['moq'] ?? 0) }} (x{{ (int) ($row['order_multiple'] ?? 1) }})</td>
                             <td class="text-muted">
                                 {{ number_format((float) ($row['normalized']['r_price'] ?? 0), 3) }} /
                                 {{ number_format((float) ($row['normalized']['r_leadtime'] ?? 0), 3) }} /
                                 {{ number_format((float) ($row['normalized']['r_fulfillment'] ?? 0), 3) }}
                             </td>
                             <td>
-                                <span class="score-pill">{{ number_format((float) $row['score'], 3) }}</span>
+                                <span class="score-pill">{{ number_format((float) ($row['score'] ?? 0), 3) }}</span>
                             </td>
                         </tr>
                     @empty
@@ -163,7 +164,7 @@
                     <tbody>
                         @foreach($evaluation['ineligible'] as $inel)
                             <tr>
-                                <td>{{ $inel['supplier_name'] }}</td>
+                                <td>{{ $inel['supplier_name'] ?? $inel['name'] ?? ('Supplier #' . ($inel['supplier_id'] ?? '')) }}</td>
                                 <td>{{ strtoupper((string) ($inel['status'] ?? 'inactive')) }}</td>
                                 <td>${{ number_format((float) ($inel['price'] ?? 0), 2) }}</td>
                                 <td>{{ (int) ($inel['lead_time_days'] ?? 0) }} days</td>
@@ -179,6 +180,7 @@
                 </table>
             </div>
         @endif
+        </div>
     </main>
 
     @include('partials.footer')

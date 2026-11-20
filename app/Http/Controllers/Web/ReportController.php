@@ -37,7 +37,7 @@ class ReportController extends Controller
 
         $salesReport = $this->salesReportQuery->execute($filters, $user);
         $inventoryReport = $this->inventoryReportQuery->execute($filters, $user);
-        $charts = $this->reportChartService->buildCharts($filters, $user);
+        $charts = $this->reportChartService->buildCharts($filters, $user, null, $salesReport, $inventoryReport);
 
         return view('reports.index', [
             'user' => $user,
