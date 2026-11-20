@@ -26,60 +26,99 @@
                     </p>
                 </div>
             </div>
+            <form method="GET" action="{{ route('anomalies.index') }}" data-async-form data-async-target="#anomalies-results" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; align-items: flex-end;">
+                <div>
+                    <label for="branch_id" style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569;">Branch</label>
+                    <select name="branch_id" id="branch_id" style="padding: 0.45rem 0.65rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        <option value="">All Branches</option>
+                        @foreach($branches as $b)
+                            <option value="{{ $b->id }}" @selected((int) $selectedBranchId === (int) $b->id)>{{ $b->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="status" style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569;">Status</label>
+                    <select name="status" id="status" style="padding: 0.45rem 0.65rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        <option value="" @selected($selectedStatus === '')>All Statuses</option>
+                        <option value="new" @selected($selectedStatus === 'new')>New</option>
+                        <option value="acknowledged" @selected($selectedStatus === 'acknowledged')>Acknowledged</option>
+                        <option value="explained" @selected($selectedStatus === 'explained')>Explained</option>
+                        <option value="dismissed" @selected($selectedStatus === 'dismissed')>Dismissed</option>
+                    </select>
+                </div>
+            </form>
         </div>
 
-        <div class="card">
-            <h3 style="margin-top: 0;">Detected Sales Anomalies ({{ $anomalies->count() }})</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
-                        <th style="padding: 0.65rem;">Date</th>
-                        <th style="padding: 0.65rem;">Product / Branch</th>
-                        <th style="padding: 0.65rem;">Expected vs Actual</th>
-                        <th style="padding: 0.65rem;">Deviation Score</th>
-                        <th style="padding: 0.65rem;">Operational Context</th>
-                        <th style="padding: 0.65rem;">Status &amp; Review</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($anomalies as $anomaly)
-                        @php
-                            $ctx = $anomaly->context ?? [];
-                        @endphp
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 0.65rem;">{{ $anomaly->detected_date?->format('Y-m-d') }}</td>
-                            <td style="padding: 0.65rem;">
-                                <strong>{{ $anomaly->product?->name ?? 'Product' }}</strong>
-                                <div style="font-size: 0.78rem; color: #64748b;">{{ $anomaly->branch?->name ?? 'Branch' }}</div>
-                            </td>
-                            <td style="padding: 0.65rem;">
-                                Baseline: {{ number_format((float) $anomaly->expected_value, 1) }} &rarr;
-                                <strong>Actual: {{ number_format((float) $anomaly->actual_value, 1) }}</strong>
-                            </td>
-                            <td style="padding: 0.65rem; font-weight: 700;">{{ number_format((float) $anomaly->deviation_score, 3) }}</td>
-                            <td style="padding: 0.65rem; font-size: 0.82rem;">
-                                <div>{{ $ctx['calendar_note'] ?? '' }}</div>
-                                <div>Stock-Out: {{ !empty($ctx['stock_out_detected']) ? 'Yes' : 'No' }} &bull; Active Discount: {{ !empty($ctx['has_active_discount']) ? 'Yes' : 'No' }}</div>
-                                @if($anomaly->notes)
-                                    <div style="color: #334155; margin-top: 0.25rem;"><em>Notes: {{ $anomaly->notes }}</em></div>
-                                @endif
-                            </td>
-                            <td style="padding: 0.65rem;">
-                                <div style="font-weight: 700; margin-bottom: 0.35rem;">{{ ucfirst($anomaly->status) }}</div>
-                                <form method="POST" action="{{ route('anomalies.review', $anomaly->id) }}" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
-                                    @csrf
-                                    <input type="text" name="notes" placeholder="Explanation / notes..." style="padding: 0.3rem; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 4px;">
-                                    <button type="submit" name="action" value="acknowledged" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; background: #0284c7; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Acknowledge</button>
-                                    <button type="submit" name="action" value="explained" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; background: #16a34a; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Explain</button>
-                                    <button type="submit" name="action" value="dismissed" style="padding: 0.3rem 0.5rem; font-size: 0.75rem; background: #64748b; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Dismiss</button>
-                                </form>
-                            </td>
+        <div class="card" id="anomalies-results" data-async-target style="padding: 0; overflow: hidden;">
+            <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">Detected Sales Anomalies</h3>
+                <span class="is-badge is-badge-info">{{ $anomalies->count() }} records</span>
+            </div>
+            <div class="is-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product / Branch</th>
+                            <th>Expected vs Actual</th>
+                            <th>Deviation Score</th>
+                            <th>Operational Context</th>
+                            <th>Status &amp; Review</th>
                         </tr>
-                    @empty
-                        <tr><td colspan="6" style="padding: 1rem; color: #64748b;">No sales anomalies found.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse($anomalies as $anomaly)
+                            @php
+                                $ctx = $anomaly->context ?? [];
+                                $statusBadge = match(strtolower((string) $anomaly->status)) {
+                                    'explained' => 'is-badge-success',
+                                    'acknowledged' => 'is-badge-info',
+                                    'dismissed' => 'is-badge-neutral',
+                                    default => 'is-badge-danger',
+                                };
+                            @endphp
+                            <tr>
+                                <td>{{ $anomaly->detected_date?->format('Y-m-d') }}</td>
+                                <td>
+                                    <strong>{{ $anomaly->product?->name ?? 'Product' }}</strong>
+                                    <div style="font-size: 0.78rem; color: #64748b;">{{ $anomaly->branch?->name ?? 'Branch' }}</div>
+                                </td>
+                                <td>
+                                    Baseline: {{ number_format((float) $anomaly->expected_value, 1) }} &rarr;
+                                    <strong>Actual: {{ number_format((float) $anomaly->actual_value, 1) }}</strong>
+                                </td>
+                                <td style="font-weight: 700;">{{ number_format((float) $anomaly->deviation_score, 3) }}</td>
+                                <td style="font-size: 0.82rem;">
+                                    <div>{{ $ctx['calendar_note'] ?? '' }}</div>
+                                    <div>Stock-Out: {{ !empty($ctx['stock_out_detected']) ? 'Yes' : 'No' }} &bull; Active Discount: {{ !empty($ctx['has_active_discount']) ? 'Yes' : 'No' }}</div>
+                                    @if($anomaly->notes)
+                                        <div style="color: #334155; margin-top: 0.25rem;"><em>Notes: {{ $anomaly->notes }}</em></div>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div style="margin-bottom: 0.45rem;">
+                                        <span class="is-badge {{ $statusBadge }}">{{ ucfirst($anomaly->status) }}</span>
+                                    </div>
+                                    <form method="POST" action="{{ route('anomalies.review', $anomaly->id) }}" data-async-action data-refresh-target="#anomalies-results" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                                        @csrf
+                                        <input type="text" name="notes" placeholder="Explanation / notes..." style="padding: 0.32rem 0.5rem; font-size: 0.78rem; min-width: 140px;">
+                                        <button type="submit" name="action" value="acknowledged" class="is-btn is-btn-sm is-btn-info">Acknowledge</button>
+                                        <button type="submit" name="action" value="explained" class="is-btn is-btn-sm is-btn-success">Explain</button>
+                                        <button type="submit" name="action" value="dismissed" class="is-btn is-btn-sm is-btn-secondary">Dismiss</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="is-empty-state">
+                                    <div class="is-empty-state-title">No sales anomalies found</div>
+                                    <p class="is-empty-state-desc">No statistical sales deviations match the selected branch and status filters.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
     @include('partials.footer')

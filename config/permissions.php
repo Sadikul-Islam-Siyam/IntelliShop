@@ -450,7 +450,7 @@ return [
             'badge' => 'Full System Control',
             'description' => 'System-wide administrative control across all branches, configurations, and user privileges.',
             'modules' => [
-                ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
+                ['name' => 'Customers & Segments', 'description' => 'Manage customer profiles, loyalty points, and purchase history.', 'route' => '/customers', 'icon' => 'users'],
                 ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
                 ['name' => 'Suppliers', 'description' => 'Manage supplier profiles, contact credentials, product terms, and performance evaluations.', 'route' => '/suppliers', 'icon' => 'suppliers'],
                 ['name' => 'Demand Forecasting', 'description' => 'Statistical demand forecasting pipeline, backtest metrics, and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],
@@ -471,7 +471,7 @@ return [
             'badge' => 'Full System Control',
             'description' => 'System-wide administrative control across all branches, configurations, and user privileges.',
             'modules' => [
-                ['name' => 'Users & RBAC', 'description' => 'Manage user accounts, credentials, and access roles.', 'route' => '/users', 'icon' => 'users'],
+                ['name' => 'Customers & Segments', 'description' => 'Manage customer profiles, loyalty points, and purchase history.', 'route' => '/customers', 'icon' => 'users'],
                 ['name' => 'Branch Network', 'description' => 'Oversee all supermarket branches and managers.', 'route' => '/branches', 'icon' => 'branches'],
                 ['name' => 'Suppliers', 'description' => 'Manage supplier profiles, contact credentials, product terms, and performance evaluations.', 'route' => '/suppliers', 'icon' => 'suppliers'],
                 ['name' => 'Demand Forecasting', 'description' => 'Statistical demand forecasting pipeline, backtest metrics, and intervals.', 'route' => '/forecasting', 'icon' => 'forecast'],

@@ -15,26 +15,7 @@
     <link rel="stylesheet" href="{{ asset('css/reorder.css') }}">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <a href="/dashboard" class="brand">
-                <div class="navbar-logo-sticker">
-                    <img src="{{ asset('images/logo.jpg') }}" alt="IntelliShop" class="navbar-logo">
-                </div>
-                <span class="brand-name">IntelliShop</span>
-            </a>
-            <div class="nav-actions">
-                <span class="nav-user-info">
-                    <strong>{{ $user->name ?? 'Manager' }}</strong> ({{ $user->role->name ?? 'Manager' }})
-                </span>
-                <a href="/dashboard" class="btn-nav">&larr; Dashboard</a>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-logout">Logout</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    @include('partials.navbar')
 
     <div class="container">
         @if(session('success'))
@@ -55,12 +36,12 @@
             </div>
         </div>
 
-        <!-- Branch & Risk Filter Toolbar (Auto-Submits on Change) -->
+        <!-- Branch & Risk Filter Toolbar (Async, No Page Reload) -->
         <div class="toolbar-card">
-            <form method="GET" action="{{ route('reorder.index') }}" class="filter-form" id="reorderFilterForm">
+            <form method="GET" action="{{ route('reorder.index') }}" class="filter-form" id="reorderFilterForm" data-async-form data-async-target="#reorder-results">
                 <div class="form-group">
                     <label class="form-label" for="branch_id">Branch</label>
-                    <select name="branch_id" id="branch_id" class="form-control" onchange="this.form.submit()">
+                    <select name="branch_id" id="branch_id" class="form-control">
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}" @selected($branch->id == $selectedBranchId)>
                                 {{ $branch->name }} ({{ $branch->code }})
@@ -71,7 +52,7 @@
 
                 <div class="form-group">
                     <label class="form-label" for="risk_level">Risk Tier</label>
-                    <select name="risk_level" id="risk_level" class="form-control" onchange="this.form.submit()">
+                    <select name="risk_level" id="risk_level" class="form-control">
                         <option value="" @selected($selectedRisk === '')>All Risk Levels</option>
                         <option value="HIGH" @selected($selectedRisk === 'HIGH')>High Risk</option>
                         <option value="MEDIUM" @selected($selectedRisk === 'MEDIUM')>Medium Risk</option>
@@ -81,7 +62,7 @@
 
                 <div class="form-group">
                     <label class="form-label" for="filter">Order Filter</label>
-                    <select name="filter" id="filter" class="form-control" onchange="this.form.submit()">
+                    <select name="filter" id="filter" class="form-control">
                         <option value="" @selected($filterMode === '')>All Catalog Products</option>
                         <option value="reorder_needed" @selected($filterMode === 'reorder_needed')>Actionable Reorders Only</option>
                         <option value="conflicts" @selected($filterMode === 'conflicts')>Capacity / MOQ Conflicts Only</option>
@@ -94,7 +75,7 @@
         </div>
 
         <!-- Clean Manager Replenishment Review Table -->
-        <div class="section-card">
+        <div class="section-card" id="reorder-results" data-async-target>
             <div class="section-header">
                 <div class="section-title">Replenishment Order Recommendations</div>
                 <div class="section-badge">
@@ -202,14 +183,14 @@
                                     </td>
                                     <td style="text-align: right;">
                                         @if($finalQty > 0 && !$isConflict)
-                                            <form method="POST" action="{{ route('reorder.approve') }}" style="display: inline-block;">
+                                            <form method="POST" action="{{ route('reorder.approve') }}" style="display: inline-block;" data-async-action data-refresh-target="#reorder-results" data-success-message="Draft purchase order approved!">
                                                 @csrf
                                                 <input type="hidden" name="product_id" value="{{ $prod['id'] }}">
                                                 <input type="hidden" name="branch_id" value="{{ $selectedBranchId }}">
                                                 <input type="hidden" name="supplier_id" id="hidden_supplier_{{ $prod['id'] }}" value="{{ $supp['id'] ?? '' }}">
                                                 <input type="hidden" name="quantity" value="{{ $finalQty }}">
                                                 <input type="hidden" name="unit_price" id="hidden_price_{{ $prod['id'] }}" value="{{ $unitPrice }}">
-                                                <button type="submit" class="btn-approve">Approve Order</button>
+                                                <button type="submit" class="btn-approve" data-loading-text="Approving...">Approve Order</button>
                                             </form>
                                         @elseif($isConflict)
                                             <button type="button" class="btn-approve-disabled" disabled title="Cannot satisfy MOQ within capacity">Blocked</button>
@@ -226,16 +207,7 @@
         </div>
     </div>
 
-    <footer class="dashboard-footer">
-        <div class="footer-container">
-            <div>
-                <strong>IntelliShop</strong> &mdash; Intelligent Super Shop Management &amp; Decision Support System.
-            </div>
-            <div>
-                <span>&copy; {{ date('Y') }} IntelliShop. All rights reserved.</span>
-            </div>
-        </div>
-    </footer>
+    @include('partials.footer')
 
     <script>
         function handleSupplierChange(productId, selectElem) {

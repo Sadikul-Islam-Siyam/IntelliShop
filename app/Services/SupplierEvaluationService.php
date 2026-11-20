@@ -159,6 +159,29 @@ class SupplierEvaluationService
         $fallbackResult = $this->evaluateFallback($payload);
         $merged = array_merge($fallbackResult, $serviceResult);
 
+        // Normalize supplier_name across ranking/eligible/ineligible rows returned by Python or PHP
+        $nameById = [];
+        foreach ($candidates as $cand) {
+            if (isset($cand['supplier_id'])) {
+                $nameById[(int) $cand['supplier_id']] = (string) ($cand['supplier_name'] ?? $cand['name'] ?? ('Supplier #' . $cand['supplier_id']));
+            }
+        }
+        $normalizeRow = static function (array $row) use ($nameById): array {
+            $sid = isset($row['supplier_id']) ? (int) $row['supplier_id'] : null;
+            if (empty($row['supplier_name'])) {
+                $row['supplier_name'] = (string) ($row['name'] ?? ($sid !== null ? ($nameById[$sid] ?? "Supplier #{$sid}") : 'Unknown Supplier'));
+            }
+            return $row;
+        };
+        foreach (['ranking', 'eligible', 'ineligible'] as $listKey) {
+            if (isset($merged[$listKey]) && is_array($merged[$listKey])) {
+                $merged[$listKey] = array_map($normalizeRow, $merged[$listKey]);
+            }
+        }
+        if (isset($merged['recommended_supplier']) && is_array($merged['recommended_supplier'])) {
+            $merged['recommended_supplier'] = $normalizeRow($merged['recommended_supplier']);
+        }
+
         if (isset($merged['alert']) && is_string($merged['alert']) && trim($merged['alert']) !== '') {
             $merged['alert'] = [
                 'code' => self::ALERT_NO_ELIGIBLE_SUPPLIERS,

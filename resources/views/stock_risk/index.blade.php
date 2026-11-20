@@ -21,26 +21,7 @@
     <link rel="stylesheet" href="{{ asset('css/stock-risk.css') }}">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <a href="/dashboard" class="brand">
-                <div class="navbar-logo-sticker">
-                    <img src="{{ asset('images/logo.jpg') }}" alt="IntelliShop" class="navbar-logo">
-                </div>
-                <span class="brand-name">IntelliShop</span>
-            </a>
-            <div class="nav-actions">
-                <span class="nav-user-info">
-                    <strong>{{ $user->name ?? 'Manager' }}</strong> ({{ $user->role->name ?? 'Manager' }})
-                </span>
-                <a href="/dashboard" class="btn-nav">&larr; Dashboard</a>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-logout">Logout</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    @include('partials.navbar')
 
     <div class="container">
         <div id="statusAlert" class="alert-box"></div>
@@ -56,9 +37,9 @@
         </div>
 
         <div class="filter-card">
-            <form method="GET" action="{{ route('stock-risk.index') }}" class="filter-group">
+            <form method="GET" action="{{ route('stock-risk.index') }}" class="filter-group" data-async-form data-async-target="#stock-risk-results">
                 <span class="filter-label">Branch:</span>
-                <select name="branch_id" class="select-input" onchange="this.form.submit()">
+                <select name="branch_id" class="select-input">
                     @foreach($branches as $b)
                         <option value="{{ $b->id }}" {{ $b->id == $selectedBranchId ? 'selected' : '' }}>
                             {{ $b->name }}
@@ -67,7 +48,7 @@
                 </select>
 
                 <span class="filter-label" style="margin-left: 0.5rem;">Risk Filter:</span>
-                <select name="risk_level" class="select-input" onchange="this.form.submit()">
+                <select name="risk_level" class="select-input">
                     <option value="">All Risk Levels</option>
                     <option value="HIGH" {{ $selectedRisk == 'HIGH' ? 'selected' : '' }}>High Risk</option>
                     <option value="MEDIUM" {{ $selectedRisk == 'MEDIUM' ? 'selected' : '' }}>Medium Risk</option>
@@ -86,7 +67,7 @@
             </div>
         </div>
 
-        <div class="data-table-card">
+        <div class="data-table-card" id="stock-risk-results" data-async-target>
             <table>
                 <thead>
                     <tr>
@@ -138,16 +119,7 @@
         </div>
     </div>
 
-    <footer class="dashboard-footer">
-        <div class="footer-container">
-            <div>
-                <strong>IntelliShop</strong> &mdash; Intelligent Super Shop Management &amp; Decision Support System.
-            </div>
-            <div>
-                <span>&copy; {{ date('Y') }} IntelliShop. All rights reserved.</span>
-            </div>
-        </div>
-    </footer>
+    @include('partials.footer')
 
     <script>
         async function refreshAllAssessments() {

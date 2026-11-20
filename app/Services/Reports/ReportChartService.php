@@ -27,32 +27,42 @@ class ReportChartService
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function buildCharts(array $filters = [], ?User $user = null, ?string $type = null): array
-    {
+    public function buildCharts(
+        array $filters = [],
+        ?User $user = null,
+        ?string $type = null,
+        ?array $precomputedSalesReport = null,
+        ?array $precomputedInventoryReport = null
+    ): array {
         $branchId = $this->salesReportQuery->resolveScopedBranchId($filters['branch_id'] ?? null, $user);
 
         if ($type !== null) {
             return match (strtolower($type)) {
-                'sales', 'sales_trend' => $this->buildSalesChart($filters, $user),
-                'inventory', 'inventory_valuation' => $this->buildInventoryChart($filters, $user),
+                'sales', 'sales_trend' => $this->buildSalesChart($filters, $user, $precomputedSalesReport),
+                'inventory', 'inventory_valuation' => $this->buildInventoryChart($filters, $user, $precomputedInventoryReport),
                 'forecasts', 'forecast' => $this->buildForecastChart($branchId, $filters['product_id'] ?? null),
                 'risk', 'stock_risk' => $this->buildStockRiskChart($branchId),
                 'markdown', 'markdowns' => $this->buildMarkdownChart($branchId),
-                default => $this->buildAllCharts($filters, $user, $branchId),
+                default => $this->buildAllCharts($filters, $user, $branchId, $precomputedSalesReport, $precomputedInventoryReport),
             };
         }
 
-        return $this->buildAllCharts($filters, $user, $branchId);
+        return $this->buildAllCharts($filters, $user, $branchId, $precomputedSalesReport, $precomputedInventoryReport);
     }
 
     /**
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function buildAllCharts(array $filters = [], ?User $user = null, ?int $branchId = null): array
-    {
-        $salesChart = $this->buildSalesChart($filters, $user);
-        $inventoryChart = $this->buildInventoryChart($filters, $user);
+    public function buildAllCharts(
+        array $filters = [],
+        ?User $user = null,
+        ?int $branchId = null,
+        ?array $precomputedSalesReport = null,
+        ?array $precomputedInventoryReport = null
+    ): array {
+        $salesChart = $this->buildSalesChart($filters, $user, $precomputedSalesReport);
+        $inventoryChart = $this->buildInventoryChart($filters, $user, $precomputedInventoryReport);
         $forecastChart = $this->buildForecastChart($branchId, $filters['product_id'] ?? null);
         $riskChart = $this->buildStockRiskChart($branchId);
         $markdownChart = $this->buildMarkdownChart($branchId);
@@ -76,9 +86,9 @@ class ReportChartService
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function buildSalesChart(array $filters = [], ?User $user = null): array
+    public function buildSalesChart(array $filters = [], ?User $user = null, ?array $precomputedReport = null): array
     {
-        $report = $this->salesReportQuery->execute($filters, $user);
+        $report = $precomputedReport ?? $this->salesReportQuery->execute($filters, $user);
         $daily = $report['daily_breakdown'] ?? [];
 
         $labels = array_column($daily, 'date');
@@ -116,9 +126,9 @@ class ReportChartService
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function buildInventoryChart(array $filters = [], ?User $user = null): array
+    public function buildInventoryChart(array $filters = [], ?User $user = null, ?array $precomputedReport = null): array
     {
-        $report = $this->inventoryReportQuery->execute($filters, $user);
+        $report = $precomputedReport ?? $this->inventoryReportQuery->execute($filters, $user);
         $items = array_slice($report['items'] ?? [], 0, 15);
 
         $labels = array_map(fn ($i) => (string) ($i['product_name'] ?? $i['sku']), $items);
@@ -157,21 +167,19 @@ class ReportChartService
      */
     public function buildForecastChart(?int $branchId = null, mixed $productId = null): array
     {
-        $query = DemandForecast::query()
+        $rows = DemandForecast::query()
+            ->selectRaw('DATE(forecast_date) as forecast_day, SUM(predicted_demand) as total_demand')
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->when($productId, fn ($q) => $q->where('product_id', (int) $productId))
-            ->orderBy('forecast_date');
-
-        $rows = $query->get()
-            ->groupBy(fn (DemandForecast $f) => $f->forecast_date instanceof \DateTimeInterface
-                ? $f->forecast_date->format('Y-m-d')
-                : substr((string) $f->forecast_date, 0, 10));
+            ->groupByRaw('DATE(forecast_date)')
+            ->orderBy('forecast_day')
+            ->get();
 
         $labels = [];
         $predicted = [];
-        foreach ($rows as $dateStr => $group) {
-            $labels[] = (string) $dateStr;
-            $predicted[] = round((float) $group->sum('predicted_demand'), 2);
+        foreach ($rows as $row) {
+            $labels[] = (string) $row->forecast_day;
+            $predicted[] = round((float) $row->total_demand, 2);
         }
 
         return [
@@ -197,13 +205,15 @@ class ReportChartService
      */
     public function buildStockRiskChart(?int $branchId = null): array
     {
-        $predictions = StockPrediction::query()
+        $counts = StockPrediction::query()
+            ->selectRaw('UPPER(risk_level) as tier, COUNT(*) as total')
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
-            ->get();
+            ->groupByRaw('UPPER(risk_level)')
+            ->pluck('total', 'tier');
 
-        $high = $predictions->filter(fn ($p) => strtoupper((string) $p->risk_level) === 'HIGH')->count();
-        $medium = $predictions->filter(fn ($p) => strtoupper((string) $p->risk_level) === 'MEDIUM')->count();
-        $low = $predictions->filter(fn ($p) => strtoupper((string) $p->risk_level) === 'LOW')->count();
+        $high = (int) ($counts['HIGH'] ?? 0);
+        $medium = (int) ($counts['MEDIUM'] ?? 0);
+        $low = (int) ($counts['LOW'] ?? 0);
 
         return [
             'chart_type' => 'doughnut',

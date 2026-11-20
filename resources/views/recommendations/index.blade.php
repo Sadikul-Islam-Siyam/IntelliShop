@@ -27,58 +27,76 @@
                         Urgency: {{ number_format(($weights['urgency'] ?? 0.30) * 100, 0) }}%).
                     </p>
                 </div>
-                <form method="POST" action="{{ route('recommendations.run') }}">
+                <form method="POST" action="{{ route('recommendations.run') }}" data-async-action data-refresh-target="#recommendations-results" data-success-message="Recommendation engine executed.">
                     @csrf
                     <input type="hidden" name="branch_id" value="{{ $selectedBranchId }}">
-                    <button type="submit" style="background: #2563eb; color: #fff; border: none; padding: 0.65rem 1.25rem; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                    <button type="submit" data-loading-text="Running Rules..." style="background: #2563eb; color: #fff; border: none; padding: 0.65rem 1.25rem; border-radius: 8px; font-weight: 700; cursor: pointer;">
                         Run Expert Rules
                     </button>
                 </form>
             </div>
         </div>
 
-        <div class="card">
-            <h3 style="margin-top: 0;">Ordered Recommendation Inbox ({{ $recommendations->count() }})</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
-                        <th style="padding: 0.65rem;">Rank</th>
-                        <th style="padding: 0.65rem;">Priority Score</th>
-                        <th style="padding: 0.65rem;">Type</th>
-                        <th style="padding: 0.65rem;">Explainable Rationale &amp; Rule Factors</th>
-                        <th style="padding: 0.65rem;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($recommendations as $index => $rec)
-                        @php
-                            $factors = is_array($rec->factors) ? $rec->factors : [];
-                        @endphp
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 0.65rem; font-weight: 800;">#{{ $index + 1 }}</td>
-                            <td style="padding: 0.65rem;">
-                                <span style="font-weight: 800; color: #1e293b;">{{ number_format((float) $rec->priority_score, 2) }}</span>
-                                <span style="font-size: 0.75rem; text-transform: uppercase; margin-left: 0.35rem; padding: 0.15rem 0.45rem; border-radius: 4px; background: #fee2e2; color: #991b1b; font-weight: 700;">
-                                    {{ strtoupper($rec->priority) }}
-                                </span>
-                            </td>
-                            <td style="padding: 0.65rem; font-weight: 700;">{{ strtoupper($rec->type) }}</td>
-                            <td style="padding: 0.65rem;">
-                                <div>{{ $rec->recommendation_text }}</div>
-                                @if(!empty($factors['rule']))
-                                    <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.25rem;">
-                                        Rule: <code>{{ $factors['rule'] }}</code>
-                                        @if(!empty($factors['action'])) &bull; Action: <code>{{ $factors['action'] }}</code> @endif
-                                    </div>
-                                @endif
-                            </td>
-                            <td style="padding: 0.65rem;">{{ ucfirst($rec->status) }}</td>
+        <div class="card" id="recommendations-results" data-async-target style="padding: 0; overflow: hidden;">
+            <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">Ordered Recommendation Inbox</h3>
+                <span class="is-badge is-badge-info">{{ $recommendations->count() }} queued</span>
+            </div>
+            <div class="is-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Priority</th>
+                            <th>Type</th>
+                            <th>Explainable Rationale &amp; Rule Factors</th>
+                            <th>Status</th>
                         </tr>
-                    @empty
-                        <tr><td colspan="5" style="padding: 1rem; color: #64748b;">No open recommendations in the queue.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse($recommendations as $index => $rec)
+                            @php
+                                $factors = is_array($rec->factors) ? $rec->factors : [];
+                                $prioClass = match(strtolower((string) $rec->priority)) {
+                                    'high', 'critical' => 'is-badge-danger',
+                                    'medium' => 'is-badge-warning',
+                                    default => 'is-badge-success',
+                                };
+                                $stClass = match(strtolower((string) $rec->status)) {
+                                    'approved', 'applied' => 'is-badge-success',
+                                    'dismissed', 'rejected' => 'is-badge-neutral',
+                                    default => 'is-badge-info',
+                                };
+                            @endphp
+                            <tr>
+                                <td style="font-weight: 800;">#{{ $index + 1 }}</td>
+                                <td>
+                                    <span style="font-weight: 800; color: #0f172a; margin-right: 0.4rem;">{{ number_format((float) $rec->priority_score, 2) }}</span>
+                                    <span class="is-badge {{ $prioClass }}">{{ strtoupper($rec->priority) }}</span>
+                                </td>
+                                <td style="font-weight: 700; font-size: 0.8rem;">{{ strtoupper(str_replace('_', ' ', $rec->type)) }}</td>
+                                <td>
+                                    <div>{{ $rec->recommendation_text }}</div>
+                                    @if(!empty($factors['rule']))
+                                        <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.25rem;">
+                                            Rule: <code>{{ $factors['rule'] }}</code>
+                                            @if(!empty($factors['action'])) &bull; Action: <code>{{ $factors['action'] }}</code> @endif
+                                        </div>
+                                    @endif
+                                </td>
+                                <td><span class="is-badge {{ $stClass }}">{{ ucfirst($rec->status) }}</span></td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="is-empty-state">
+                                    <div class="is-empty-state-title">No open recommendations in the queue</div>
+                                    <p class="is-empty-state-desc">Click <strong>Run Expert Rules</strong> above to evaluate current stock, markdown, and anomaly signals.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
     @include('partials.footer')

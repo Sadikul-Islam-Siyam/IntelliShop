@@ -21,28 +21,7 @@
     <link rel="stylesheet" href="{{ asset('css/audit-logs.css') }}">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <a href="/dashboard" class="brand">
-                <div class="navbar-logo-sticker">
-                    <img src="{{ asset('images/logo.jpg') }}" alt="IntelliShop" class="navbar-logo">
-                </div>
-                <span class="brand-name">IntelliShop</span>
-            </a>
-            <div class="nav-actions">
-                <span class="nav-user-info">
-                    <strong>{{ $user->name ?? 'Administrator' }}</strong> ({{ $user->role->name ?? 'Admin' }})
-                </span>
-                <a href="/dashboard" class="btn-nav">
-                    &larr; Dashboard
-                </a>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-logout">Logout</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    @include('partials.navbar')
 
     <main class="page-container">
         <div class="page-header">
@@ -256,16 +235,7 @@
         </div>
     </div>
 
-    <footer class="dashboard-footer">
-        <div class="footer-container">
-            <div>
-                <strong>IntelliShop</strong> &mdash; Intelligent Super Shop Management &amp; Decision Support System.
-            </div>
-            <div>
-                <span>&copy; {{ date('Y') }} IntelliShop. All rights reserved.</span>
-            </div>
-        </div>
-    </footer>
+    @include('partials.footer')
 
     <!-- Axios Client & Audit Logs Interactive Module -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>

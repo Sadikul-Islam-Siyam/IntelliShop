@@ -46,7 +46,7 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('overstock.index') }}" class="filter-bar">
+        <form method="GET" action="{{ route('overstock.index') }}" class="filter-bar" data-async-form data-async-target="#overstock-results">
             <label for="branch_id" class="text-muted">Branch:</label>
             <select name="branch_id" id="branch_id" class="filter-select">
                 @foreach($branches as $b)
@@ -67,7 +67,7 @@
             <button type="submit" class="btn btn-primary">Apply Filter</button>
         </form>
 
-        <div class="card">
+        <div class="card" id="overstock-results" data-async-target>
             <table>
                 <thead>
                     <tr>

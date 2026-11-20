@@ -14,12 +14,13 @@
             <h2>Natural-Language Business Queries (NLQ)</h2>
             <p class="welcome-subtitle">Ask plain-English questions about sales, inventory, stock-out risks, suppliers, anomalies, or expiring batches. All queries map strictly to whitelisted read-only intents.</p>
 
-            <form method="GET" action="{{ route('nlq.index') }}" style="display: flex; gap: 0.75rem; margin-top: 1rem;">
-                <input type="text" name="query" value="{{ $query }}" placeholder="e.g., What were total sales at Main Branch in the last 7 days?" style="flex: 1; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem;">
+            <form method="GET" action="{{ route('nlq.index') }}" data-async-form data-async-target="#nlq-results" style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                <input type="text" name="query" data-no-debounce="1" value="{{ $query }}" placeholder="e.g., What were total sales at Main Branch in the last 7 days?" style="flex: 1; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem;">
                 <button type="submit" style="background: #2563eb; color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer;">Resolve Question</button>
             </form>
         </div>
 
+        <div id="nlq-results" data-async-target>
         @if($resolution)
             <div class="card">
                 <h3 style="margin-top: 0;">Intent Classification &amp; Extracted Slots</h3>
@@ -32,6 +33,7 @@
                 <pre style="background: #0f172a; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto;">{{ json_encode($resolution['slots'] ?? [], JSON_PRETTY_PRINT) }}</pre>
             </div>
         @endif
+        </div>
     </main>
     @include('partials.footer')
 </body>

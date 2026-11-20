@@ -11,6 +11,8 @@ use App\Services\Analytics\StockRiskService;
 use App\Services\ReorderCalculator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -37,8 +39,22 @@ class ReorderController extends Controller
         $filterMode = $request->input('filter', '');
 
         try {
-            $this->stockRiskService->ensureBranchPredictions($selectedBranchId);
-            $recommendations = $this->reorderCalculator->ensureBranchCalculations($selectedBranchId);
+            $invStats = DB::table('inventory')
+                ->where('branch_id', $selectedBranchId)
+                ->selectRaw('COUNT(*) as c, COALESCE(SUM(quantity_available), 0) as q, COALESCE(SUM(quantity_reserved), 0) as r')
+                ->first();
+            $poCount = DB::table('purchase_orders')->where('branch_id', $selectedBranchId)->count();
+            $freshness = ($invStats->c ?? 0) . ':' . ($invStats->q ?? 0) . ':' . ($invStats->r ?? 0) . ':' . $poCount;
+            $cacheKey = "ux:reorders:branch:{$selectedBranchId}:" . md5($freshness);
+
+            if ($request->boolean('refresh') || app()->runningUnitTests()) {
+                Cache::forget($cacheKey);
+            }
+
+            $recommendations = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($selectedBranchId) {
+                $this->stockRiskService->ensureBranchPredictions($selectedBranchId);
+                return $this->reorderCalculator->ensureBranchCalculations($selectedBranchId);
+            });
         } catch (\Throwable $e) {
             Log::warning('Failed to auto-compute reorder recommendations on page load: ' . $e->getMessage());
             $recommendations = [];

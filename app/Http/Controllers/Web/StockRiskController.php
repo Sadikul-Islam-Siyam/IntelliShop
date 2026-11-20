@@ -11,6 +11,8 @@ use App\Services\Analytics\DemandForecastService;
 use App\Services\Analytics\StockRiskService;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class StockRiskController extends Controller
@@ -36,9 +38,21 @@ class StockRiskController extends Controller
 
         $horizonDays = (int) $this->settings->get('forecast_horizon_days', 14);
 
-        // Update using the exact same database records & service as demand forecasting
-        $this->forecastService->ensureBranchForecasts($selectedBranchId, $horizonDays);
-        $this->stockRiskService->ensureBranchPredictions($selectedBranchId, false, $horizonDays);
+        // Update using the exact same database records & service as demand forecasting (freshness-cached)
+        $invStats = DB::table('inventory')
+            ->where('branch_id', $selectedBranchId)
+            ->selectRaw('COUNT(*) as c, COALESCE(SUM(quantity_available), 0) as q')
+            ->first();
+        $freshness = ($invStats->c ?? 0) . ':' . ($invStats->q ?? 0);
+        $syncKey = "ux:stock_risk_sync:branch:{$selectedBranchId}:h:{$horizonDays}:" . md5($freshness);
+
+        if ($request->boolean('refresh') || app()->runningUnitTests() || !Cache::has($syncKey)) {
+            $this->forecastService->ensureBranchForecasts($selectedBranchId, $horizonDays);
+            $this->stockRiskService->ensureBranchPredictions($selectedBranchId, false, $horizonDays);
+            if (!app()->runningUnitTests()) {
+                Cache::put($syncKey, true, now()->addMinutes(5));
+            }
+        }
 
         $selectedRisk = $request->query('risk_level')
             ? strtoupper($request->query('risk_level'))
