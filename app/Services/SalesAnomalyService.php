@@ -121,6 +121,86 @@ class SalesAnomalyService
         return $savedAnomalies;
     }
 
+    /**
+     * Build explanatory operational context (stock-outs, active discounts, promotions, holidays/weekends)
+     * around an anomaly's detected_date (#54 Anomaly Review Workflow).
+     *
+     * @return array<string, mixed>
+     */
+    public function buildContextForAnomaly(SalesAnomaly $anomaly): array
+    {
+        $date = $anomaly->detected_date ? Carbon::parse($anomaly->detected_date) : Carbon::today();
+        $dateStr = $date->toDateString();
+        $product = $anomaly->product;
+
+        // 1. Check stock-outs or zero-inventory transactions near detected_date
+        $inventory = \App\Models\Inventory::query()
+            ->where('product_id', $anomaly->product_id)
+            ->where('branch_id', $anomaly->branch_id)
+            ->first();
+
+        $stockOutTxCount = \App\Models\InventoryTransaction::query()
+            ->where('product_id', $anomaly->product_id)
+            ->where('branch_id', $anomaly->branch_id)
+            ->whereDate('created_at', '>=', $date->copy()->subDays(2)->toDateString())
+            ->whereDate('created_at', '<=', $date->copy()->addDay()->toDateString())
+            ->where(function ($q) {
+                $q->where('quantity_after', '<=', 0)
+                    ->orWhere('transaction_type', 'stock_out');
+            })
+            ->count();
+
+        $hadStockOut = ($inventory && (int) $inventory->quantity_available <= 0) || $stockOutTxCount > 0;
+
+        // 2. Active discounts on detected_date
+        $discounts = \App\Models\Discount::query()
+            ->where('status', 'active')
+            ->where(function ($q) use ($anomaly, $product) {
+                $q->where('product_id', $anomaly->product_id);
+                if ($product && $product->category_id) {
+                    $q->orWhere('category_id', $product->category_id);
+                }
+            })
+            ->where(function ($q) use ($date) {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', $date->copy()->endOfDay());
+            })
+            ->where(function ($q) use ($date) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', $date->copy()->startOfDay());
+            })
+            ->get(['id', 'name', 'type', 'value'])
+            ->map(fn ($d) => [
+                'id' => $d->id,
+                'name' => $d->name,
+                'type' => $d->type,
+                'value' => (float) $d->value,
+            ])
+            ->values()
+            ->all();
+
+        // 3. Customer promotion emails dispatched near detected_date
+        $promotionsCount = \App\Models\ProductPromotion::query()
+            ->where('product_id', $anomaly->product_id)
+            ->whereBetween('created_at', [$date->copy()->subDays(7)->startOfDay(), $date->copy()->endOfDay()])
+            ->count();
+
+        // 4. Calendar / holiday / weekend context
+        $dayOfWeek = $date->format('l');
+        $isWeekend = in_array($date->dayOfWeekIso, [5, 6, 7], true); // Fri/Sat/Sun retail peak
+
+        return [
+            'detected_date' => $dateStr,
+            'day_of_week' => $dayOfWeek,
+            'is_weekend_or_holiday' => $isWeekend,
+            'calendar_note' => $isWeekend ? "Weekend/Peak trading day ({$dayOfWeek})" : "Standard trading weekday ({$dayOfWeek})",
+            'stock_out_detected' => $hadStockOut,
+            'current_stock' => $inventory ? (int) $inventory->quantity_available : null,
+            'active_discounts' => $discounts,
+            'has_active_discount' => !empty($discounts),
+            'recent_promotions_sent' => $promotionsCount,
+            'signal_notice' => 'Alert is a statistical screening signal, not proof of error or fraud.',
+        ];
+    }
+
     private function calculateMedian(array $numbers): float
     {
         if (empty($numbers)) {
