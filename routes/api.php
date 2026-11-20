@@ -167,10 +167,10 @@ Route::prefix('v1')->group(function () {
             Route::post('recommendations/{id}/review', [\App\Http\Controllers\Api\V1\RecommendationReviewController::class, 'review'])->name('api.v1.recommendations.review');
         });
 
-        // Natural-Language Business Queries Intent Classification & Slot Filling (#60)
+        // Natural-Language Business Queries Intent Classification & Slot Filling (#60, #61, #62, #63)
         Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,sales-employee,system-analyst')->group(function () {
             Route::post('nlq/resolve', [\App\Http\Controllers\Api\V1\NlqController::class, 'resolve'])->name('api.v1.nlq.resolve');
-            Route::post('nlq/ask', [\App\Http\Controllers\Api\V1\NlqController::class, 'resolve'])->name('api.v1.nlq.ask');
+            Route::post('nlq/ask', [\App\Http\Controllers\Api\V1\NlqController::class, 'ask'])->name('api.v1.nlq.ask');
         });
     });
 

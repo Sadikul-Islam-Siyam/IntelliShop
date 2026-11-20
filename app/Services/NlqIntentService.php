@@ -290,13 +290,25 @@ class NlqIntentService
     protected function enrichDatabaseEntities(array $slots, string $rawQuery): array
     {
         try {
-            if (!isset($slots['branch_id']) && !empty($slots['branch'])) {
-                $branch = Branch::query()
-                    ->where('name', 'like', '%' . $slots['branch'] . '%')
-                    ->first();
-                if ($branch) {
-                    $slots['branch_id'] = $branch->id;
-                    $slots['branch'] = $branch->name;
+            if (!isset($slots['branch_id'])) {
+                if (!empty($slots['branch'])) {
+                    $branch = Branch::query()
+                        ->where('name', 'like', '%' . $slots['branch'] . '%')
+                        ->first();
+                    if ($branch) {
+                        $slots['branch_id'] = $branch->id;
+                        $slots['branch'] = $branch->name;
+                    }
+                } else {
+                    // Check if query text mentions any known branch name
+                    $branches = Branch::query()->select('id', 'name')->get();
+                    foreach ($branches as $b) {
+                        if (stripos($rawQuery, $b->name) !== false) {
+                            $slots['branch_id'] = (int) $b->id;
+                            $slots['branch'] = $b->name;
+                            break;
+                        }
+                    }
                 }
             }
 
