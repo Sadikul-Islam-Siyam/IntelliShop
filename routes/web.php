@@ -128,10 +128,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/market-basket/run', [\App\Http\Controllers\Web\MarketBasketController::class, 'run'])->name('market-basket.run');
     });
 
-    // Recommendation Engine & Priority Queue workspace (#57, #58)
+    // Recommendation Engine & Priority Queue workspace (#57, #58, #59)
     Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
         Route::get('/recommendations', [\App\Http\Controllers\Web\RecommendationController::class, 'index'])->name('recommendations.index');
         Route::post('/recommendations/run', [\App\Http\Controllers\Web\RecommendationController::class, 'run'])->name('recommendations.run');
+        Route::post('/recommendations/{id}/review', [\App\Http\Controllers\Web\RecommendationController::class, 'review'])->name('recommendations.review');
     });
 
     // Phantom Inventory & Cycle Count Reconciliation (#71)

@@ -160,10 +160,11 @@ Route::prefix('v1')->group(function () {
             Route::get('reports/charts/{type?}', [\App\Http\Controllers\Api\V1\ReportController::class, 'charts'])->name('api.v1.reports.charts');
         });
 
-        // Rule-Based Recommendation Engine & Priority Queueing (#57, #58)
+        // Rule-Based Recommendation Engine & Priority Queueing (#57, #58, #59)
         Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
             Route::post('recommendations/run', [\App\Http\Controllers\Api\V1\RecommendationController::class, 'run'])->name('api.v1.recommendations.run');
             Route::get('recommendations', [\App\Http\Controllers\Api\V1\RecommendationController::class, 'index'])->name('api.v1.recommendations.index');
+            Route::post('recommendations/{id}/review', [\App\Http\Controllers\Api\V1\RecommendationReviewController::class, 'review'])->name('api.v1.recommendations.review');
         });
 
         // Natural-Language Business Queries Intent Classification & Slot Filling (#60)
