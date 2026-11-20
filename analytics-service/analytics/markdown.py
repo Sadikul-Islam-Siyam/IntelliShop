@@ -116,3 +116,32 @@ def evaluate_batch_markdowns(
         res.update(calc)
         results.append(res)
     return results
+
+
+def handle_markdown_run_request(payload: Dict[str, Any]):
+    """HTTP endpoint handler for POST /markdown/run."""
+    if not isinstance(payload, dict):
+        return 422, {"status": "error", "message": "Payload must be a JSON dictionary."}
+
+    batches = payload.get("batches", [])
+    baseline_days = int(payload.get("baseline_days", DEFAULT_BASELINE_DAYS))
+    horizon_days = int(payload.get("horizon_days", DEFAULT_HORIZON_DAYS))
+    max_pct = float(payload.get("max_markdown_pct", DEFAULT_MAX_MARKDOWN_PCT))
+    step_pct = float(payload.get("step_pct", DEFAULT_STEP_PCT))
+    threshold_pct = float(payload.get("approval_threshold_pct", DEFAULT_APPROVAL_THRESHOLD_PCT))
+
+    evaluated = evaluate_batch_markdowns(
+        batches=batches if isinstance(batches, list) else [],
+        baseline_days=baseline_days,
+        horizon_days=horizon_days,
+        max_markdown_pct=max_pct,
+        step_pct=step_pct,
+        approval_threshold_pct=threshold_pct,
+    )
+
+    return 200, {
+        "status": "success",
+        "count": len(evaluated),
+        "recommendations": evaluated,
+    }
+

@@ -67,6 +67,51 @@ def _register_overstock_handler() -> None:
         pass
 
 
+def _register_markdown_handler() -> None:
+    """Registers the zero-waste batch markdown handler."""
+    try:
+        from analytics.markdown import handle_markdown_run_request  # type: ignore
+        register_post_handler("/markdown/run", handle_markdown_run_request)
+    except ImportError:
+        pass
+
+
+def _register_phantom_handler() -> None:
+    """Registers the phantom inventory detection handler."""
+    try:
+        from analytics.phantom_inventory import handle_phantom_run_request  # type: ignore
+        register_post_handler("/phantom/run", handle_phantom_run_request)
+    except ImportError:
+        pass
+
+
+def _register_anomaly_handler() -> None:
+    """Registers the statistical sales anomaly detection handler."""
+    try:
+        from models.zscore_anomaly import handle_anomaly_run_request  # type: ignore
+        register_post_handler("/anomaly/run", handle_anomaly_run_request)
+    except ImportError:
+        pass
+
+
+def _register_basket_handler() -> None:
+    """Registers the market basket association rule mining handler."""
+    try:
+        from analytics.market_basket import handle_basket_run_request  # type: ignore
+        register_post_handler("/basket/run", handle_basket_run_request)
+    except ImportError:
+        pass
+
+
+def _register_nlq_handler() -> None:
+    """Registers the NLQ intent classification & slot filling handler."""
+    try:
+        from nlq.intent_resolver import handle_nlq_resolve_request  # type: ignore
+        register_post_handler("/nlq/resolve", handle_nlq_resolve_request)
+    except ImportError:
+        pass
+
+
 def _register_forecast_handlers() -> None:
     """Registers the forecasting handlers when the model package is available."""
     try:
@@ -151,6 +196,21 @@ def dispatch_request(
 
         if parsed_path == "/overstock/run" and parsed_path not in _POST_HANDLERS:
             _register_overstock_handler()
+
+        if parsed_path == "/markdown/run" and parsed_path not in _POST_HANDLERS:
+            _register_markdown_handler()
+
+        if parsed_path == "/phantom/run" and parsed_path not in _POST_HANDLERS:
+            _register_phantom_handler()
+
+        if parsed_path == "/anomaly/run" and parsed_path not in _POST_HANDLERS:
+            _register_anomaly_handler()
+
+        if parsed_path == "/basket/run" and parsed_path not in _POST_HANDLERS:
+            _register_basket_handler()
+
+        if parsed_path == "/nlq/resolve" and parsed_path not in _POST_HANDLERS:
+            _register_nlq_handler()
 
         if parsed_path in _POST_HANDLERS:
             return _POST_HANDLERS[parsed_path](payload)
