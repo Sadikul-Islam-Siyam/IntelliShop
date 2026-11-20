@@ -143,8 +143,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/cycle-counts/{id}/reject', [\App\Http\Controllers\Web\CycleCountController::class, 'reject'])->name('cycle-counts.reject');
     });
 
-    // Natural-Language Business Queries workspace (#60)
+    // Natural-Language Business Queries workspace (#60, #61, #62, #63)
     Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager,sales-employee')->group(function () {
         Route::get('/nlq', [\App\Http\Controllers\Web\NlqController::class, 'index'])->name('nlq.index');
+        Route::post('/nlq/ask', [\App\Http\Controllers\Web\NlqController::class, 'ask'])->name('nlq.ask');
     });
 });
