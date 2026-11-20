@@ -3,9 +3,10 @@
 use App\Http\Controllers\Api\V1\AnalyticsExportController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
-use App\Http\Controllers\Api\V1\SupplierController;
-use App\Http\Controllers\Api\V1\SettingsController;
 use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\ForecastController;
+use App\Http\Controllers\Api\V1\SettingsController;
+use App\Http\Controllers\Api\V1\SupplierController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,29 @@ Route::prefix('v1')->group(function () {
         // User management CRUD
         Route::apiResource('users', UserController::class)->names('api.v1.users');
 
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+            Route::post('anomalies/run', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'run'])->name('api.v1.anomalies.run');
+            Route::get('anomalies', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'index'])->name('api.v1.anomalies.index');
+            Route::get('anomalies/{anomaly}', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'show'])->name('api.v1.anomalies.show');
+            Route::post('anomalies/{anomaly}/review', [\App\Http\Controllers\Api\V1\AnomalyController::class, 'review'])->name('api.v1.anomalies.review');
+            Route::post('basket/run', [\App\Http\Controllers\Api\V1\MarketBasketController::class, 'run'])->name('api.v1.basket.run');
+            Route::get('basket/rules', [\App\Http\Controllers\Api\V1\MarketBasketController::class, 'index'])->name('api.v1.basket.rules');
+        });
+
+        Route::middleware('role:admin,super-admin,branch-manager,inventory-manager')->group(function () {
+            Route::post('markdown/run', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'run'])->name('api.v1.markdown.run');
+            Route::get('markdown/recommendations', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'index'])->name('api.v1.markdown.index');
+            Route::post('markdown/{recommendation}/approve', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'approve'])->name('api.v1.markdown.approve');
+            Route::post('markdown/{recommendation}/reject', [\App\Http\Controllers\Api\V1\MarkdownController::class, 'reject'])->name('api.v1.markdown.reject');
+            Route::post('phantom/run', [\App\Http\Controllers\Api\V1\PhantomInventoryController::class, 'run'])->name('api.v1.phantom.run');
+            Route::get('phantom/candidates', [\App\Http\Controllers\Api\V1\PhantomInventoryController::class, 'candidates'])->name('api.v1.phantom.candidates');
+            Route::get('cycle-counts', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'index'])->name('api.v1.cycle-counts.index');
+            Route::get('cycle-counts/{id}', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'show'])->name('api.v1.cycle-counts.show');
+            Route::post('cycle-counts/{id}/count', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'recordCount'])->name('api.v1.cycle-counts.count');
+            Route::post('cycle-counts/{id}/approve', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'approve'])->name('api.v1.cycle-counts.approve');
+            Route::post('cycle-counts/{id}/reject', [\App\Http\Controllers\Api\V1\CycleCountController::class, 'reject'])->name('api.v1.cycle-counts.reject');
+        });
+
         Route::middleware('role:admin,branch-manager')->group(function () {
             Route::get('branches', [BranchController::class, 'index'])->name('api.v1.branches.index');
             Route::get('branches/{branch}', [BranchController::class, 'show'])->name('api.v1.branches.show');
@@ -47,15 +71,31 @@ Route::prefix('v1')->group(function () {
             Route::patch('branches/{branch}', [BranchController::class, 'update']);
             Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('api.v1.branches.destroy');
         });
-        Route::middleware('role:admin,branch-manager,sales-employee,cashier')->group(function () {
+        Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,sales-employee,cashier,system-analyst')->group(function () {
+            Route::get('crosssell/{product}', [\App\Http\Controllers\Api\V1\CrossSellController::class, 'show'])->name('api.v1.crosssell');
+            Route::get('pos/substitutes/{product}', [\App\Http\Controllers\Api\V1\ProductSubstitutionController::class, 'show'])->name('api.v1.pos.substitutes');
+        });
+        Route::middleware('role:admin,super-admin,branch-manager,sales-employee,cashier')->group(function () {
             Route::get('customers', [CustomerController::class, 'index'])->name('api.v1.customers.index');
+            Route::get('customers/{customer}/history', [\App\Http\Controllers\Api\V1\CustomerHistoryController::class, 'show'])->name('api.v1.customers.history');
             Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('api.v1.customers.show');
+            Route::get('promotions', [\App\Http\Controllers\Api\V1\PromotionController::class, 'index'])->name('api.v1.promotions.index');
+            Route::post('promotions/send', [\App\Http\Controllers\Api\V1\PromotionController::class, 'send'])->name('api.v1.promotions.send');
         });
         Route::middleware('role:admin,branch-manager,sales-employee')->group(function () {
             Route::post('customers', [CustomerController::class, 'store'])->name('api.v1.customers.store');
             Route::put('customers/{customer}', [CustomerController::class, 'update'])->name('api.v1.customers.update');
             Route::patch('customers/{customer}', [CustomerController::class, 'update']);
             Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('api.v1.customers.destroy');
+        });
+
+        // Supplier Evaluation & Fulfillment endpoints (#47, #48, #67, #68)
+        Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
+            Route::get('suppliers/ranking', [\App\Http\Controllers\Api\V1\SupplierRankingController::class, 'index'])->name('api.v1.suppliers.ranking.index');
+            Route::post('suppliers/ranking/override', [\App\Http\Controllers\Api\V1\SupplierRankingController::class, 'override'])->name('api.v1.suppliers.ranking.override');
+            Route::get('suppliers/evaluate', [\App\Http\Controllers\Api\V1\SupplierEvaluationController::class, 'index'])->name('api.v1.suppliers.evaluate.index');
+            Route::post('suppliers/evaluate', [\App\Http\Controllers\Api\V1\SupplierEvaluationController::class, 'evaluate'])->name('api.v1.suppliers.evaluate');
+            Route::post('suppliers/fulfillment', [\App\Http\Controllers\Api\V1\SupplierEvaluationController::class, 'recalculateFulfillment'])->name('api.v1.suppliers.fulfillment');
         });
 
         Route::middleware('role:admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
@@ -80,6 +120,58 @@ Route::prefix('v1')->group(function () {
         Route::get('audit-logs/{id}', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'show'])
             ->middleware('role:admin,super-admin')
             ->name('api.v1.audit-logs.show');
+
+        // Demand Forecasting endpoints
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+            Route::get('forecasts', [ForecastController::class, 'index'])->name('api.v1.forecasts.index');
+        });
+        Route::middleware('role:admin,super-admin,system-analyst,purchase-manager,branch-manager')->group(function () {
+            Route::post('forecasts/run', [ForecastController::class, 'run'])->name('api.v1.forecasts.run');
+            Route::post('forecasts/run-all', [ForecastController::class, 'runAll'])->name('api.v1.forecasts.run-all');
+        });
+
+        // Stock-Out Risk Classification endpoints (#44)
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+            Route::get('stock-risk', [\App\Http\Controllers\Api\V1\StockRiskController::class, 'index'])->name('api.v1.stock-risk.index');
+        });
+        Route::middleware('role:admin,super-admin,system-analyst,purchase-manager,branch-manager')->group(function () {
+            Route::post('stock-risk/run', [\App\Http\Controllers\Api\V1\StockRiskController::class, 'run'])->name('api.v1.stock-risk.run');
+        });
+
+        // Dynamic Replenishment & Safety Stock endpoints (#45, #46)
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+            Route::get('reorder', [\App\Http\Controllers\Api\V1\ReorderController::class, 'index'])->name('api.v1.reorder.index');
+        });
+        Route::middleware('role:admin,super-admin,purchase-manager,branch-manager,system-analyst')->group(function () {
+            Route::post('reorder/calculate', [\App\Http\Controllers\Api\V1\ReorderController::class, 'calculate'])->name('api.v1.reorder.calculate');
+            Route::post('reorder/{id}/review', [\App\Http\Controllers\Api\V1\RecommendationReviewController::class, 'reviewReorder'])->name('api.v1.reorder.review');
+        });
+
+        // Slow-Moving & Overstock Detection endpoints (#50, #51)
+        Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+            Route::post('overstock/run', [\App\Http\Controllers\Api\V1\OverstockController::class, 'run'])->name('api.v1.overstock.run');
+            Route::get('overstock/alerts', [\App\Http\Controllers\Api\V1\OverstockController::class, 'alerts'])->name('api.v1.overstock.alerts');
+        });
+
+        // Sales & Inventory Reports and Chart.js Visualizations (#33, #34)
+        Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,sales-employee,system-analyst')->group(function () {
+            Route::get('reports/sales', [\App\Http\Controllers\Api\V1\ReportController::class, 'sales'])->name('api.v1.reports.sales');
+            Route::get('reports/inventory', [\App\Http\Controllers\Api\V1\ReportController::class, 'inventory'])->name('api.v1.reports.inventory');
+            Route::get('reports/charts/{type?}', [\App\Http\Controllers\Api\V1\ReportController::class, 'charts'])->name('api.v1.reports.charts');
+        });
+
+        // Rule-Based Recommendation Engine & Priority Queueing (#57, #58, #59)
+        Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,system-analyst')->group(function () {
+            Route::post('recommendations/run', [\App\Http\Controllers\Api\V1\RecommendationController::class, 'run'])->name('api.v1.recommendations.run');
+            Route::get('recommendations', [\App\Http\Controllers\Api\V1\RecommendationController::class, 'index'])->name('api.v1.recommendations.index');
+            Route::post('recommendations/{id}/review', [\App\Http\Controllers\Api\V1\RecommendationReviewController::class, 'review'])->name('api.v1.recommendations.review');
+        });
+
+        // Natural-Language Business Queries Intent Classification & Slot Filling (#60, #61, #62, #63)
+        Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,sales-employee,system-analyst')->group(function () {
+            Route::post('nlq/resolve', [\App\Http\Controllers\Api\V1\NlqController::class, 'resolve'])->name('api.v1.nlq.resolve');
+            Route::post('nlq/ask', [\App\Http\Controllers\Api\V1\NlqController::class, 'ask'])->name('api.v1.nlq.ask');
+        });
     });
 
     // Analytics Data Extraction API

@@ -22,7 +22,22 @@ class DatabaseSettingsService implements SettingsService
     public function set(string $key, mixed $value): void
     {
         DB::transaction(function () use ($key, $value): void {
-            $setting = SystemSetting::query()->where('setting_key', $key)->lockForUpdate()->firstOrFail();
+            $setting = SystemSetting::query()->where('setting_key', $key)->lockForUpdate()->first();
+            if (!$setting) {
+                $type = is_int($value) ? 'int' : (is_float($value) ? 'decimal' : (is_array($value) ? 'json' : 'string'));
+                $encoded = $this->encode($type, $value);
+                $setting = SystemSetting::create([
+                    'setting_group' => 'general',
+                    'setting_key' => $key,
+                    'setting_value' => $encoded,
+                    'value_type' => $type,
+                    'description' => $key,
+                    'updated_by' => auth()->id(),
+                    'updated_at' => now(),
+                ]);
+                return;
+            }
+
             $encoded = $this->encode($setting->value_type, $value);
             $previous = $this->decode($setting);
 

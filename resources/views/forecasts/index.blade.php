@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Upcoming Demand Forecast — IntelliShop</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32x32.png') }}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ asset('css/forecasts.css') }}">
+</head>
+<body>
+    @include('partials.navbar')
+
+    <main class="page-container">
+        <div class="page-header">
+            <div>
+                <h1>
+                    Upcoming Demand Forecast
+                    <span class="tag-badge">{{ $branch?->name ?? 'Main Branch' }}</span>
+                </h1>
+                <p class="page-subtitle">
+                    Required product quantities (in units) for the upcoming {{ $horizonDays }} days.
+                </p>
+            </div>
+        </div>
+
+        <!-- Product Summary Table -->
+        <section class="card-panel">
+            <div class="card-panel-header">
+                <div class="card-panel-title">Required Quantity by Product (Upcoming {{ $horizonDays }} Days)</div>
+                <span class="pill pill-selected">Units Required</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th>Tomorrow</th>
+                            <th>Next 7 Days</th>
+                            <th>Next {{ $horizonDays }} Days Total</th>
+                            <th>Daily Average</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($productForecasts as $item)
+                            <tr>
+                                <td style="font-weight: 700;">{{ $item['product_name'] }}</td>
+                                <td><span class="pill pill-baseline">{{ $item['sku'] }}</span></td>
+                                <td style="font-weight: 600;">{{ $item['next_day_units'] }} units</td>
+                                <td style="font-weight: 700; color: var(--accent);">{{ $item['next_7_days_units'] }} units</td>
+                                <td style="font-weight: 800; color: var(--success); font-size: 0.95rem;">{{ $item['total_horizon_units'] }} units</td>
+                                <td>{{ $item['avg_daily_units'] }} units / day</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #64748b;">No products available.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    @include('partials.footer')
+</body>
+</html>

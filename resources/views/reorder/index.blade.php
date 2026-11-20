@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Replenishment &amp; Purchase Orders — IntelliShop</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32x32.png') }}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/reorder.css') }}">
+</head>
+<body>
+    @include('partials.navbar')
+
+    <div class="container">
+        @if(session('success'))
+            <div class="alert-box alert-success" style="display: block; margin-bottom: 1.5rem; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 0.85rem 1.25rem; border-radius: 8px; font-weight: 600;">
+                ✓ {{ session('success') }}
+            </div>
+        @endif
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    Dynamic Replenishment &amp; Purchase Advice
+                    <span class="sr-only">Safety Stock (SS), Reorder Point (ROP), Target Stock</span>
+                </h1>
+                <p class="page-subtitle">
+                    Automated replenishment quantities, verified supplier contract terms, and purchase order approval.
+                </p>
+            </div>
+        </div>
+
+        <!-- Branch & Risk Filter Toolbar (Async, No Page Reload) -->
+        <div class="toolbar-card">
+            <form method="GET" action="{{ route('reorder.index') }}" class="filter-form" id="reorderFilterForm" data-async-form data-async-target="#reorder-results">
+                <div class="form-group">
+                    <label class="form-label" for="branch_id">Branch</label>
+                    <select name="branch_id" id="branch_id" class="form-control">
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}" @selected($branch->id == $selectedBranchId)>
+                                {{ $branch->name }} ({{ $branch->code }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="risk_level">Risk Tier</label>
+                    <select name="risk_level" id="risk_level" class="form-control">
+                        <option value="" @selected($selectedRisk === '')>All Risk Levels</option>
+                        <option value="HIGH" @selected($selectedRisk === 'HIGH')>High Risk</option>
+                        <option value="MEDIUM" @selected($selectedRisk === 'MEDIUM')>Medium Risk</option>
+                        <option value="LOW" @selected($selectedRisk === 'LOW')>Low Risk</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="filter">Order Filter</label>
+                    <select name="filter" id="filter" class="form-control">
+                        <option value="" @selected($filterMode === '')>All Catalog Products</option>
+                        <option value="reorder_needed" @selected($filterMode === 'reorder_needed')>Actionable Reorders Only</option>
+                        <option value="conflicts" @selected($filterMode === 'conflicts')>Capacity / MOQ Conflicts Only</option>
+                    </select>
+                </div>
+            </form>
+            <div class="toolbar-meta">
+                Showing {{ count($recommendations) }} products for selected branch
+            </div>
+        </div>
+
+        <!-- Clean Manager Replenishment Review Table -->
+        <div class="section-card" id="reorder-results" data-async-target>
+            <div class="section-header">
+                <div class="section-title">Replenishment Order Recommendations</div>
+                <div class="section-badge">
+                    Supplier-Verified Replenishment
+                </div>
+            </div>
+
+            @if(empty($recommendations))
+                <div class="empty-state">
+                    <p>No replenishment records match the selected filters.</p>
+                </div>
+            @else
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Available Supplier</th>
+                                <th>Current Stock</th>
+                                <th>Unit Price</th>
+                                <th>Replenishment Quantity</th>
+                                <th>Total Estimated Price</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($recommendations as $item)
+                                @php
+                                    $prod = $item['product'];
+                                    $supp = $item['supplier'];
+                                    $params = $item['parameters'];
+                                    $calc = $item['calculation'];
+                                    $isConflict = (bool) ($calc['conflict'] ?? false);
+                                    $finalQty = (int) ($calc['final_quantity'] ?? 0);
+                                    $unitPrice = (float) ($prod['unit_price'] ?? 0.0);
+                                    $totalCost = round($finalQty * $unitPrice, 2);
+                                @endphp
+                                <tr class="{{ $isConflict ? 'row-conflict' : '' }}">
+                                    <td>
+                                        <div class="product-name">{{ $prod['name'] }}</div>
+                                        <div class="sku-subtext">{{ $prod['sku'] }}</div>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $availableSuppliers = !empty($item['available_suppliers']) ? $item['available_suppliers'] : [$supp];
+                                        @endphp
+                                        @if(count($availableSuppliers) > 1)
+                                            <select class="supplier-select"
+                                                    id="supplier_select_{{ $prod['id'] }}"
+                                                    data-product-id="{{ $prod['id'] }}"
+                                                    data-qty="{{ $finalQty }}"
+                                                    onchange="handleSupplierChange({{ $prod['id'] }}, this)">
+                                                @foreach($availableSuppliers as $avail)
+                                                    @php
+                                                        $isSel = ($avail['id'] ?? null) == ($supp['id'] ?? null);
+                                                        $availPrice = (float) ($avail['supply_price'] ?? $unitPrice);
+                                                        $availLead = (int) ($avail['lead_time_days'] ?? $supp['lead_time_days']);
+                                                        $availMoq = (int) ($avail['min_order_qty'] ?? $avail['moq'] ?? $supp['moq']);
+                                                        $availMult = (int) ($avail['order_multiple'] ?? $supp['order_multiple']);
+                                                    @endphp
+                                                    <option value="{{ $avail['id'] }}"
+                                                            data-price="{{ $availPrice }}"
+                                                            data-lead="{{ $availLead }}"
+                                                            data-moq="{{ $availMoq }}"
+                                                            data-mult="{{ $availMult }}"
+                                                            {{ $isSel ? 'selected' : '' }}>
+                                                        {{ $avail['name'] }} @if(!empty($avail['is_preferred']))(Preferred)@endif &bull; ${{ number_format($availPrice, 2) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <div class="supplier-subtext" id="supplier_subtext_{{ $prod['id'] }}">
+                                                {{ $supp['lead_time_days'] }}d lead time &bull; MOQ: {{ $supp['moq'] }} &bull; Mult: &times;{{ $supp['order_multiple'] }}
+                                            </div>
+                                        @else
+                                            <div style="font-weight: 700; color: var(--text);">{{ $supp['name'] ?? 'Preferred Supplier' }}</div>
+                                            <div class="supplier-subtext">{{ $supp['lead_time_days'] }}d lead time &bull; MOQ: {{ $supp['moq'] }} &bull; Mult: &times;{{ $supp['order_multiple'] }}</div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--text);">{{ number_format((float) $params['available_stock'], 0) }} units</div>
+                                        @if((float) $params['reserved'] > 0)
+                                            <div class="param-sub">Reserved: {{ number_format((float) $params['reserved'], 0) }}</div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="price-text" id="unit_price_display_{{ $prod['id'] }}">${{ number_format($unitPrice, 2) }}</div>
+                                        <div class="price-sub">per unit</div>
+                                    </td>
+                                    <td>
+                                        @if($isConflict)
+                                            <span class="final-qty-badge final-qty-conflict">0 (Capacity Conflict)</span>
+                                            <div class="conflict-banner">&#9888; MOQ exceeds capacity</div>
+                                        @elseif($finalQty > 0)
+                                            <span class="final-qty-badge final-qty-order" style="font-size: 0.95rem;">{{ number_format($finalQty) }} units</span>
+                                        @else
+                                            <span class="final-qty-badge final-qty-zero">0 units (Stock Sufficient)</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($finalQty > 0)
+                                            <div class="total-price" id="total_price_display_{{ $prod['id'] }}">${{ number_format($totalCost, 2) }}</div>
+                                        @else
+                                            <div id="total_price_display_{{ $prod['id'] }}" style="color: var(--text-muted); font-size: 0.85rem;">$0.00</div>
+                                        @endif
+                                    </td>
+                                    <td style="text-align: right;">
+                                        @if($finalQty > 0 && !$isConflict)
+                                            <form method="POST" action="{{ route('reorder.approve') }}" style="display: inline-block;" data-async-action data-refresh-target="#reorder-results" data-success-message="Draft purchase order approved!">
+                                                @csrf
+                                                <input type="hidden" name="product_id" value="{{ $prod['id'] }}">
+                                                <input type="hidden" name="branch_id" value="{{ $selectedBranchId }}">
+                                                <input type="hidden" name="supplier_id" id="hidden_supplier_{{ $prod['id'] }}" value="{{ $supp['id'] ?? '' }}">
+                                                <input type="hidden" name="quantity" value="{{ $finalQty }}">
+                                                <input type="hidden" name="unit_price" id="hidden_price_{{ $prod['id'] }}" value="{{ $unitPrice }}">
+                                                <button type="submit" class="btn-approve" data-loading-text="Approving...">Approve Order</button>
+                                            </form>
+                                        @elseif($isConflict)
+                                            <button type="button" class="btn-approve-disabled" disabled title="Cannot satisfy MOQ within capacity">Blocked</button>
+                                        @else
+                                            <button type="button" class="btn-approve-disabled" disabled>Optimal</button>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    @include('partials.footer')
+
+    <script>
+        function handleSupplierChange(productId, selectElem) {
+            const selectedOpt = selectElem.options[selectElem.selectedIndex];
+            if (!selectedOpt) return;
+
+            const price = parseFloat(selectedOpt.getAttribute('data-price')) || 0.0;
+            const lead = selectedOpt.getAttribute('data-lead') || '7';
+            const moq = selectedOpt.getAttribute('data-moq') || '0';
+            const mult = selectedOpt.getAttribute('data-mult') || '1';
+            const qty = parseInt(selectElem.getAttribute('data-qty'), 10) || 0;
+
+            const subtextElem = document.getElementById('supplier_subtext_' + productId);
+            if (subtextElem) {
+                subtextElem.innerHTML = lead + 'd lead time &bull; MOQ: ' + moq + ' &bull; Mult: &times;' + mult;
+            }
+
+            const unitPriceElem = document.getElementById('unit_price_display_' + productId);
+            if (unitPriceElem) {
+                unitPriceElem.textContent = '$' + price.toFixed(2);
+            }
+
+            const totalPriceElem = document.getElementById('total_price_display_' + productId);
+            if (totalPriceElem) {
+                if (qty > 0) {
+                    const total = qty * price;
+                    totalPriceElem.textContent = '$' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                } else {
+                    totalPriceElem.textContent = '$0.00';
+                }
+            }
+
+            const hiddenSupplier = document.getElementById('hidden_supplier_' + productId);
+            if (hiddenSupplier) {
+                hiddenSupplier.value = selectElem.value;
+            }
+            const hiddenPrice = document.getElementById('hidden_price_' + productId);
+            if (hiddenPrice) {
+                hiddenPrice.value = price.toFixed(2);
+            }
+        }
+    </script>
+</body>
+</html>

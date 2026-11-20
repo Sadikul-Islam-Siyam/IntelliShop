@@ -76,6 +76,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Relationship: User belongs to a Branch.
+     */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /**
      * Relationship: Audit logs associated with this user.
      */
     public function auditLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
