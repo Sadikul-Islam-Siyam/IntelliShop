@@ -59,6 +59,21 @@
                     <a href="{{ route('forecasts.index') }}" class="workspace-badge" style="text-decoration: none; background: #f1f5f9; color: #334155; font-weight: 700; border: 1px solid #e2e8f0;">
                         Demand Forecasts &rarr;
                     </a>
+                    <a href="{{ route('reports.index') }}" class="workspace-badge" style="text-decoration: none; background: #dcfce7; color: #166534; font-weight: 700; border: 1px solid #bbf7d0;">
+                        Reports &amp; Charts &rarr;
+                    </a>
+                    <a href="{{ route('recommendations.index') }}" class="workspace-badge" style="text-decoration: none; background: #fef3c7; color: #92400e; font-weight: 700; border: 1px solid #fde68a;">
+                        Recommendations &rarr;
+                    </a>
+                    <a href="{{ route('anomalies.index') }}" class="workspace-badge" style="text-decoration: none; background: #fae8ff; color: #86198f; font-weight: 700; border: 1px solid #f5d0fe;">
+                        Anomalies &rarr;
+                    </a>
+                    <a href="{{ route('market-basket.index') }}" class="workspace-badge" style="text-decoration: none; background: #ffedd5; color: #9a3412; font-weight: 700; border: 1px solid #fed7aa;">
+                        Market Basket &rarr;
+                    </a>
+                    <a href="{{ route('nlq.index') }}" class="workspace-badge" style="text-decoration: none; background: #f0fdf4; color: #15803d; font-weight: 700; border: 1px solid #bbf7d0;">
+                        NLQ Query &rarr;
+                    </a>
                 </div>
             </div>
         </div>

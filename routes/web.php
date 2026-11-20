@@ -108,4 +108,34 @@ Route::middleware('auth')->group(function () {
         Route::get('/overstock', [\App\Http\Controllers\Web\OverstockController::class, 'index'])->name('overstock.index');
         Route::get('/slow-moving', [\App\Http\Controllers\Web\OverstockController::class, 'index'])->name('overstock.slow-moving');
     });
+
+    // Sales & Inventory Reports and Chart.js Visualizations workspace (#33, #34)
+    Route::middleware('role:admin,super-admin,branch-manager,inventory-manager,purchase-manager,sales-employee,system-analyst')->group(function () {
+        Route::get('/reports', [\App\Http\Controllers\Web\ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/sales', [\App\Http\Controllers\Web\ReportController::class, 'index'])->name('reports.sales');
+        Route::get('/reports/inventory', [\App\Http\Controllers\Web\ReportController::class, 'index'])->name('reports.inventory');
+    });
+
+    // Sales Anomaly Review Workflow workspace (#54)
+    Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+        Route::get('/anomalies', [\App\Http\Controllers\Web\AnomalyController::class, 'index'])->name('anomalies.index');
+        Route::post('/anomalies/{anomaly}/review', [\App\Http\Controllers\Web\AnomalyController::class, 'review'])->name('anomalies.review');
+    });
+
+    // Market Basket Analysis & Cross-Sell Display workspace (#56)
+    Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager,sales-employee,cashier')->group(function () {
+        Route::get('/market-basket', [\App\Http\Controllers\Web\MarketBasketController::class, 'index'])->name('market-basket.index');
+        Route::post('/market-basket/run', [\App\Http\Controllers\Web\MarketBasketController::class, 'run'])->name('market-basket.run');
+    });
+
+    // Recommendation Engine & Priority Queue workspace (#57, #58)
+    Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager')->group(function () {
+        Route::get('/recommendations', [\App\Http\Controllers\Web\RecommendationController::class, 'index'])->name('recommendations.index');
+        Route::post('/recommendations/run', [\App\Http\Controllers\Web\RecommendationController::class, 'run'])->name('recommendations.run');
+    });
+
+    // Natural-Language Business Queries workspace (#60)
+    Route::middleware('role:admin,super-admin,system-analyst,branch-manager,inventory-manager,purchase-manager,sales-employee')->group(function () {
+        Route::get('/nlq', [\App\Http\Controllers\Web\NlqController::class, 'index'])->name('nlq.index');
+    });
 });
