@@ -18,34 +18,37 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <a href="/dashboard" class="brand">
-                <div class="navbar-logo-sticker">
-                    <img src="{{ asset('images/logo.jpg') }}" alt="IntelliShop" class="navbar-logo">
-                </div>
-                <span class="brand-name">IntelliShop</span>
-            </a>
-            <div class="nav-actions">
-                <span class="nav-user-info">
-                    <strong>{{ $user->name ?? 'User' }}</strong> ({{ $user->role->name ?? 'User' }})
-                </span>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-logout">Logout</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    @include('partials.navbar')
     <main class="main-content">
         <div class="card">
             <div class="workspace-header">
-                <h2>Welcome to IntelliShop, {{ $user->name ?? 'User' }}!</h2>
+                <div>
+                    <h2>Welcome back, {{ $user->name ?? 'User' }}</h2>
+                    <p class="welcome-subtitle">
+                        {{ $user->role->name ?? 'User' }} Workspace &bull; Status: <span class="status-active">{{ ucfirst($user->status ?? 'active') }}</span>
+                    </p>
+                </div>
+                <span class="workspace-badge">{{ $roleConfig['badge'] ?? ($user->role->name ?? 'Workspace') }}</span>
             </div>
-            <p class="welcome-subtitle">
-                Account Status: <span class="status-active">{{ ucfirst($user->status ?? 'active') }}</span>
-            </p>
         </div>
+
+        @if(!empty($widgets))
+            @php $tones = ['blue', 'emerald', 'indigo', 'amber']; @endphp
+            <div class="is-kpi-grid">
+                @foreach($widgets as $idx => $widget)
+                    <div class="is-kpi-card" data-tone="{{ $tones[$idx % count($tones)] }}">
+                        <div class="is-kpi-label">{{ $widget['label'] }}</div>
+                        <div class="is-kpi-value">
+                            @if(($widget['format'] ?? '') === 'currency')
+                                ${{ number_format($widget['value'], 2) }}
+                            @else
+                                {{ number_format($widget['value']) }}
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
 
         @if(isset($roleConfig))
             <div class="card">
@@ -67,18 +70,34 @@
                     @endforeach
                 </div>
             </div>
+        @else
+            <div class="card">
+                <div class="dashboard-section-title">
+                    Operational Modules & Quick Actions
+                </div>
+
+                <div class="modules-grid">
+                    <a href="{{ route('suppliers.index') }}" class="module-card">
+                        <div class="module-title">Suppliers</div>
+                        <div class="module-desc">Manage supplier profiles, contact credentials, product terms, and performance evaluations.</div>
+                    </a>
+                    <a href="{{ route('reorder.index') }}" class="module-card">
+                        <div class="module-title">Dynamic Replenishment</div>
+                        <div class="module-desc">Automated Safety Stock (SS), Reorder Point (ROP), and constraint-aware replenishment advice.</div>
+                    </a>
+                    <a href="{{ route('stock-risk.index') }}" class="module-card">
+                        <div class="module-title">Stock-Out Risk</div>
+                        <div class="module-desc">Timeline days-of-cover projections and supplier risk classifications.</div>
+                    </a>
+                    <a href="{{ route('forecasts.index') }}" class="module-card">
+                        <div class="module-title">Demand Forecasting</div>
+                        <div class="module-desc">Statistical demand forecasting pipeline, backtest metrics, and prediction intervals.</div>
+                    </a>
+                </div>
+            </div>
         @endif
     </main>
-    <footer class="dashboard-footer">
-        <div class="footer-container">
-            <div class="footer-brand">
-                <strong>IntelliShop</strong> &mdash; Intelligent Super Shop Management & Decision Support System.
-            </div>
-            <div class="footer-meta">
-                <span>&copy; {{ date('Y') }} IntelliShop. All rights reserved.</span>
-            </div>
-        </div>
-    </footer>
+    @include('partials.footer')
 
     <!-- Axios and dashboard JavaScript module -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>

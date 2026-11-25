@@ -12,7 +12,7 @@ class SettingsSeeder extends Seeder
     {
         $defaults = [
             ['forecast', 'forecast_horizon_days', '14', 'int', 'Default forecast and replenishment horizon in days.'],
-            ['forecast', 'forecast_metric_primary', 'smape', 'string', 'Primary forecast comparison metric.'],
+            ['forecast', 'forecast_metric_primary', 'sse', 'string', 'Primary forecast comparison metric (course formula: SSE).'],
             ['replenishment', 'replenishment_service_level', '0.95', 'decimal', 'Target service level used to select the z value.'],
             ['replenishment', 'replenishment_review_period_days', '7', 'int', 'Replenishment review period in days.'],
             ['replenishment', 'replenishment_safety_stock_formula', 'z*sigma_d*sqrt(L)', 'string', 'Safety stock formula; sigma_d is daily demand deviation and L is lead time.'],
@@ -37,6 +37,9 @@ class SettingsSeeder extends Seeder
             ['substitution', 'substitution_category_weight', '2.0', 'decimal', 'Category similarity weight.'],
             ['anomaly', 'anomaly_mad_threshold', '3.5', 'decimal', 'Modified z-score threshold for sales anomalies.'],
             ['anomaly', 'anomaly_iqr_k', '1.5', 'decimal', 'IQR fence multiplier for anomaly detection.'],
+            ['recommendation', 'recommendation_weight_risk', '0.45', 'decimal', 'Priority weight for risk severity in recommendation scoring.'],
+            ['recommendation', 'recommendation_weight_value', '0.25', 'decimal', 'Priority weight for monetary value at stake in recommendation scoring.'],
+            ['recommendation', 'recommendation_weight_urgency', '0.30', 'decimal', 'Priority weight for time urgency in recommendation scoring.'],
             ['auth', 'auth_lockout_attempts', '5', 'int', 'Failed login attempts before lockout.'],
             ['auth', 'auth_lockout_minutes', '15', 'int', 'Login lockout duration in minutes.'],
             ['inventory', 'inventory_reconcile_schedule', '02:00', 'string', 'Nightly stock-ledger reconciliation time.'],

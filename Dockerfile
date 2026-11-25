@@ -3,6 +3,7 @@ FROM php:8.4-cli
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
+    python3 \
     libicu-dev \
     libonig-dev \
     libzip-dev \

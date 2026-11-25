@@ -132,6 +132,16 @@ class AuthService
             $request?->ip() ?? request()->ip()
         );
 
+        // Automatically ensure stock risk predictions are refreshed upon login of an authorized role
+        if ($user->hasRole(['admin', 'super-admin', 'system-analyst', 'purchase-manager', 'inventory-manager', 'branch-manager'])) {
+            $branchId = (int) ($user->branch_id ?: (\App\Models\Branch::query()->where('status', 'active')->value('id') ?? 1));
+            try {
+                app(\App\Services\Analytics\StockRiskService::class)->ensureBranchPredictions($branchId);
+            } catch (\Throwable $e) {
+                // Do not block authentication if analytics service is starting up
+            }
+        }
+
         return [
             'user' => $user,
             'role' => $user->role?->name,

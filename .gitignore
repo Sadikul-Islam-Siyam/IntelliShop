@@ -31,3 +31,8 @@ coverage/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+
+# Local PDF reference documents
+IntelliShop_Implementation_Plan (2).pdf
+Statistical_Demand_Forecasting_Methodology_Report.pdf
+Supervisor_Explanation_Guide.pdf
