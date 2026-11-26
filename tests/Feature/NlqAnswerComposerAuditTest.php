@@ -89,7 +89,7 @@ class NlqAnswerComposerAuditTest extends TestCase
     {
         $response = $this->actingAs($this->adminUser)->postJson('/api/v1/nlq/ask', [
             'query' => 'Show top 5 best selling products this month',
-            'reference_date' => '2026-11-20',
+            'reference_date' => now()->toDateString(),
         ]);
 
         $response->assertStatus(200);
