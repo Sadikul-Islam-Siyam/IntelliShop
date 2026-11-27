@@ -1,7 +1,1 @@
-.env
-.env.*
-!.env.example
-.git
-vendor
-node_modules
-files.zip
+database/datasets/
