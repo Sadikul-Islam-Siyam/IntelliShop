@@ -142,7 +142,7 @@
                                                             data-moq="{{ $availMoq }}"
                                                             data-mult="{{ $availMult }}"
                                                             {{ $isSel ? 'selected' : '' }}>
-                                                        {{ $avail['name'] }} @if(!empty($avail['is_preferred']))(Preferred)@endif &bull; ${{ number_format($availPrice, 2) }}
+                                        {{ $avail['name'] }} @if(!empty($avail['is_preferred']))(Preferred)@endif &bull; ৳{{ number_format($availPrice, 2) }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -161,7 +161,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="price-text" id="unit_price_display_{{ $prod['id'] }}">${{ number_format($unitPrice, 2) }}</div>
+                                            <div class="price-text" id="unit_price_display_{{ $prod['id'] }}">৳{{ number_format($unitPrice, 2) }}</div>
                                         <div class="price-sub">per unit</div>
                                     </td>
                                     <td>
@@ -176,9 +176,9 @@
                                     </td>
                                     <td>
                                         @if($finalQty > 0)
-                                            <div class="total-price" id="total_price_display_{{ $prod['id'] }}">${{ number_format($totalCost, 2) }}</div>
+                                            <div class="total-price" id="total_price_display_{{ $prod['id'] }}">৳{{ number_format($totalCost, 2) }}</div>
                                         @else
-                                            <div id="total_price_display_{{ $prod['id'] }}" style="color: var(--text-muted); font-size: 0.85rem;">$0.00</div>
+                                            <div id="total_price_display_{{ $prod['id'] }}" style="color: var(--text-muted); font-size: 0.85rem;">৳0.00</div>
                                         @endif
                                     </td>
                                     <td style="text-align: right;">
@@ -227,16 +227,16 @@
 
             const unitPriceElem = document.getElementById('unit_price_display_' + productId);
             if (unitPriceElem) {
-                unitPriceElem.textContent = '$' + price.toFixed(2);
+                unitPriceElem.textContent = '৳' + price.toFixed(2);
             }
 
             const totalPriceElem = document.getElementById('total_price_display_' + productId);
             if (totalPriceElem) {
                 if (qty > 0) {
                     const total = qty * price;
-                    totalPriceElem.textContent = '$' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    totalPriceElem.textContent = '৳' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 } else {
-                    totalPriceElem.textContent = '$0.00';
+                    totalPriceElem.textContent = '৳0.00';
                 }
             }
 

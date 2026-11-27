@@ -153,7 +153,7 @@ class ReorderController extends Controller
             'subtotal' => $subtotal,
         ]);
 
-        return redirect()->back()->with('success', "Purchase order #{$purchaseOrder->id} approved: {$qty} units of {$product->name} at \${$unitPrice}/unit.");
+        return redirect()->back()->with('success', "Purchase order #{$purchaseOrder->id} approved: {$qty} units of {$product->name} at ৳{$unitPrice}/unit.");
     }
 }
 

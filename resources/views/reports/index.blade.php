@@ -49,7 +49,7 @@
         <div class="is-kpi-grid">
             <div class="is-kpi-card" data-tone="blue">
                 <div class="is-kpi-label">Net Sales Revenue</div>
-                <div class="is-kpi-value">${{ number_format($salesReport['summary']['net_revenue'] ?? 0, 2) }}</div>
+                <div class="is-kpi-value">৳{{ number_format($salesReport['summary']['net_revenue'] ?? 0, 2) }}</div>
             </div>
             <div class="is-kpi-card" data-tone="emerald">
                 <div class="is-kpi-label">Completed Transactions</div>
@@ -61,7 +61,7 @@
             </div>
             <div class="is-kpi-card" data-tone="amber">
                 <div class="is-kpi-label">Inventory Retail Valuation</div>
-                <div class="is-kpi-value">${{ number_format($inventoryReport['summary']['total_retail_valuation'] ?? 0, 2) }}</div>
+                <div class="is-kpi-value">৳{{ number_format($inventoryReport['summary']['total_retail_valuation'] ?? 0, 2) }}</div>
             </div>
         </div>
 
@@ -101,9 +101,9 @@
                                 <td style="font-weight: 600;">{{ $row['date'] }}</td>
                                 <td>{{ $row['transactions'] }}</td>
                                 <td>{{ $row['units_sold'] }}</td>
-                                <td>${{ number_format($row['subtotal'], 2) }}</td>
-                                <td>${{ number_format($row['discount_amount'], 2) }}</td>
-                                <td style="font-weight: 700; color: #2563eb;">${{ number_format($row['total_revenue'], 2) }}</td>
+                                <td>৳{{ number_format($row['subtotal'], 2) }}</td>
+                                <td>৳{{ number_format($row['discount_amount'], 2) }}</td>
+                                <td style="font-weight: 700; color: #2563eb;">৳{{ number_format($row['total_revenue'], 2) }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -149,8 +149,8 @@
                                     @endif
                                 </td>
                                 <td>{{ number_format($item['reorder_point']) }}</td>
-                                <td>${{ number_format($item['cost_valuation'], 2) }}</td>
-                                <td style="font-weight: 700;">${{ number_format($item['retail_valuation'], 2) }}</td>
+                                <td>৳{{ number_format($item['cost_valuation'], 2) }}</td>
+                                <td style="font-weight: 700;">৳{{ number_format($item['retail_valuation'], 2) }}</td>
                             </tr>
                         @empty
                             <tr>

@@ -125,7 +125,7 @@
                                 @endif
                             </td>
                             <td>{{ $row['supplier_name'] ?? $row['name'] ?? ('Supplier #' . ($row['supplier_id'] ?? '')) }}</td>
-                            <td>${{ number_format((float) ($row['price'] ?? 0), 2) }}</td>
+                                <td>৳{{ number_format((float) ($row['price'] ?? 0), 2) }}</td>
                             <td>{{ (int) ($row['lead_time_days'] ?? 0) }} days</td>
                             <td>{{ number_format(((float) ($row['fulfillment_rate'] ?? 0)) * 100, 1) }}%</td>
                             <td>MOQ {{ (int) ($row['moq'] ?? 0) }} (x{{ (int) ($row['order_multiple'] ?? 1) }})</td>
@@ -166,7 +166,7 @@
                             <tr>
                                 <td>{{ $inel['supplier_name'] ?? $inel['name'] ?? ('Supplier #' . ($inel['supplier_id'] ?? '')) }}</td>
                                 <td>{{ strtoupper((string) ($inel['status'] ?? 'inactive')) }}</td>
-                                <td>${{ number_format((float) ($inel['price'] ?? 0), 2) }}</td>
+                                <td>৳{{ number_format((float) ($inel['price'] ?? 0), 2) }}</td>
                                 <td>{{ (int) ($inel['lead_time_days'] ?? 0) }} days</td>
                                 <td>{{ (int) ($inel['moq'] ?? 0) }}</td>
                                 <td>

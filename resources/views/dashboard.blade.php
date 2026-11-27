@@ -40,7 +40,7 @@
                         <div class="is-kpi-label">{{ $widget['label'] }}</div>
                         <div class="is-kpi-value">
                             @if(($widget['format'] ?? '') === 'currency')
-                                ${{ number_format($widget['value'], 2) }}
+                                ৳{{ number_format($widget['value'], 2) }}
                             @else
                                 {{ number_format($widget['value']) }}
                             @endif
