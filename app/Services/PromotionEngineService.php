@@ -151,7 +151,7 @@ class PromotionEngineService
     {
         $discountText = $discount->type === 'percentage'
             ? "{$discount->value}% off"
-            : "\${$discount->value} off";
+            : "৳{$discount->value} off";
 
         return "Special offer for {$customer->name}: Get {$discountText} on your favorite product '{$product->name}'!";
     }

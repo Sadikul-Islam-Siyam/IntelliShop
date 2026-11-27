@@ -29,7 +29,7 @@
                     @if($discount->type === 'percentage')
                         Enjoy <strong>{{ $discount->value }}% OFF</strong>
                     @else
-                        Save <strong>${{ number_format($discount->value, 2) }}</strong>
+                        Save <strong>৳{{ number_format($discount->value, 2) }}</strong>
                     @endif
                 </div>
             </div>

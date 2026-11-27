@@ -106,7 +106,7 @@ class AnswerComposer
         $days = count($rows);
 
         return sprintf(
-            'Over %d active day(s)%s, total revenue reached $%.2f across %d sales transaction(s).',
+            'Over %d active day(s)%s, total revenue reached ৳%.2f across %d sales transaction(s).',
             $days,
             $branchText,
             $totalRevenue,
@@ -123,7 +123,7 @@ class AnswerComposer
         $count = count($rows);
 
         return sprintf(
-            'Retrieved top %d best-selling product(s). Leading item is "%s" with %d unit(s) sold ($%.2f gross sales).',
+            'Retrieved top %d best-selling product(s). Leading item is "%s" with %d unit(s) sold (৳%.2f gross sales).',
             $count,
             $topName,
             $topQty,
@@ -138,7 +138,7 @@ class AnswerComposer
         $branchText = !empty($slots['branch_id']) ? " at Branch #{$slots['branch_id']}" : '';
 
         return sprintf(
-            'Found %d inventory record(s)%s with a combined stock valuation of $%.2f.',
+            'Found %d inventory record(s)%s with a combined stock valuation of ৳%.2f.',
             $count,
             $branchText,
             $totalValuation
@@ -204,7 +204,7 @@ class AnswerComposer
         $price = (float) ($top['supply_price'] ?? 0.0);
 
         return sprintf(
-            'Ranked %d supplier(s). Highest evaluated supplier is "%s" with %s%% fulfillment rate at $%.2f unit price.',
+            'Ranked %d supplier(s). Highest evaluated supplier is "%s" with %s%% fulfillment rate at ৳%.2f unit price.',
             count($rows),
             $name,
             $fulfillment,

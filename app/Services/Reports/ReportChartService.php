@@ -101,7 +101,7 @@ class ReportChartService
             'labels' => $labels,
             'datasets' => [
                 [
-                    'label' => 'Net Revenue ($)',
+                    'label' => 'Net Revenue (৳)',
                     'data' => $revenues,
                     'borderColor' => '#2563eb',
                     'backgroundColor' => 'rgba(37, 99, 235, 0.15)',
@@ -152,7 +152,7 @@ class ReportChartService
                     'backgroundColor' => '#f59e0b',
                 ],
                 [
-                    'label' => 'Retail Valuation ($)',
+                    'label' => 'Retail Valuation (৳)',
                     'data' => $valuations,
                     'backgroundColor' => '#10b981',
                 ],

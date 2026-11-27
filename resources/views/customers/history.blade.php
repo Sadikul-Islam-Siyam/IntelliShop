@@ -47,7 +47,7 @@
                     <span class="meta-pill">Loyalty Points: {{ number_format($customer->loyalty_points) }}</span>
                     <span class="meta-pill">Orders: {{ number_format($totalOrders) }}</span>
                     <span class="meta-pill">Items Purchased: {{ number_format($totalItems) }}</span>
-                    <span class="meta-pill">Total Spent: ${{ number_format($totalSpent, 2) }}</span>
+                    <span class="meta-pill">Total Spent: ৳{{ number_format($totalSpent, 2) }}</span>
                 </div>
             @endif
         </div>
@@ -78,14 +78,14 @@
                                         @foreach($sale->items as $item)
                                             <span class="item-chip">
                                                 <strong>{{ $item->product?->name ?? 'Product #' . $item->product_id }}</strong>
-                                                &times; {{ $item->quantity }} (${{ number_format((float) $item->subtotal, 2) }})
+                                                &times; {{ $item->quantity }} (৳{{ number_format((float) $item->subtotal, 2) }})
                                             </span>
                                         @endforeach
                                     </div>
                                 </td>
                                 <td class="text-capitalize">{{ str_replace('_', ' ', $sale->payment_method ?? 'cash') }}</td>
-                                <td>${{ number_format((float) $sale->discount_amount, 2) }}</td>
-                                <td class="fw-bold">${{ number_format((float) $sale->total_amount, 2) }}</td>
+                                <td>৳{{ number_format((float) $sale->discount_amount, 2) }}</td>
+                                <td class="fw-bold">৳{{ number_format((float) $sale->total_amount, 2) }}</td>
                                 <td><span class="status-completed">{{ $sale->status }}</span></td>
                             </tr>
                         @empty

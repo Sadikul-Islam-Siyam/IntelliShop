@@ -10,11 +10,13 @@
 # Laravel generated files
 /public/build/
 /public/hot
+/bootstrap/cache/*.php
 /storage/*.key
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*
 /storage/logs/*
+/database/database.sqlite
 
 # IDEs and editors
 .idea/
