@@ -2,9 +2,7 @@
 
 namespace App\Services\Reports;
 
-use App\Models\Branch;
 use App\Models\Sale;
-use App\Models\SaleItem;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -40,165 +38,95 @@ class SalesReportQuery
         $paymentMethod = !empty($filters['payment_method']) ? (string) $filters['payment_method'] : null;
         $status = !empty($filters['status']) ? (string) $filters['status'] : 'completed';
 
-        $salesQuery = Sale::query()->where('sales.status', $status);
+        $salesQuery = $this->filteredSalesQuery(
+            $branchId,
+            $startDate,
+            $endDate,
+            $categoryId,
+            $productId,
+            $paymentMethod,
+            $status,
+        );
 
-        if ($branchId !== null) {
-            $salesQuery->where('sales.branch_id', $branchId);
-        }
+        // Aggregate in MySQL instead of hydrating hundreds of thousands of sales
+        // and sale-item models into PHP collections.
+        $summary = (clone $salesQuery)
+            ->selectRaw('COUNT(*) as total_transactions, COALESCE(SUM(sales.subtotal), 0) as gross_subtotal, COALESCE(SUM(sales.discount_amount), 0) as total_discount, COALESCE(SUM(sales.tax_amount), 0) as total_tax, COALESCE(SUM(sales.total_amount), 0) as net_revenue')
+            ->first();
 
-        if ($startDate !== null) {
-            $salesQuery->where(function ($q) use ($startDate) {
-                $q->where('sales.sale_date', '>=', $startDate)
-                    ->orWhere(function ($q2) use ($startDate) {
-                        $q2->whereNull('sales.sale_date')->where('sales.created_at', '>=', $startDate);
-                    });
-            });
-        }
-
-        if ($endDate !== null) {
-            $salesQuery->where(function ($q) use ($endDate) {
-                $q->where('sales.sale_date', '<=', $endDate)
-                    ->orWhere(function ($q2) use ($endDate) {
-                        $q2->whereNull('sales.sale_date')->where('sales.created_at', '<=', $endDate);
-                    });
-            });
-        }
-
-        if ($paymentMethod !== null) {
-            $salesQuery->where('sales.payment_method', $paymentMethod);
-        }
-
-        if ($productId !== null || $categoryId !== null) {
-            $salesQuery->whereHas('items', function ($q) use ($productId, $categoryId) {
-                if ($productId !== null) {
-                    $q->where('sale_items.product_id', $productId);
-                }
-                if ($categoryId !== null) {
-                    $q->whereHas('product', fn ($pq) => $pq->where('products.category_id', $categoryId));
-                }
-            });
-        }
-
-        $sales = (clone $salesQuery)
-            ->with(['branch:id,name', 'customer:id,name,segment', 'cashier:id,name', 'items.product:id,name,sku,category_id,cost_price,selling_price'])
-            ->orderByDesc('sales.sale_date')
-            ->orderByDesc('sales.id')
-            ->get();
-
-        $saleIds = $sales->pluck('id')->all();
-
-        // Line items filtered by matching sales (and optional product/category filter)
-        $itemsQuery = SaleItem::query()
-            ->whereIn('sale_items.sale_id', $saleIds)
-            ->with(['product:id,name,sku,category_id,cost_price,selling_price', 'sale:id,branch_id,sale_date,created_at']);
-
-        if ($productId !== null) {
-            $itemsQuery->where('sale_items.product_id', $productId);
-        }
-        if ($categoryId !== null) {
-            $itemsQuery->whereHas('product', fn ($pq) => $pq->where('products.category_id', $categoryId));
-        }
-
-        $saleItems = empty($saleIds) ? collect() : $itemsQuery->get();
-
-        $totalTransactions = $sales->count();
-        $grossSubtotal = round((float) $sales->sum('subtotal'), 2);
-        $totalDiscount = round((float) $sales->sum('discount_amount'), 2);
-        $totalTax = round((float) $sales->sum('tax_amount'), 2);
-        $netRevenue = round((float) $sales->sum('total_amount'), 2);
-        $totalUnitsSold = (int) $saleItems->sum('quantity');
-        $itemsSubtotalSum = round((float) $saleItems->sum('subtotal'), 2);
+        $totalTransactions = (int) ($summary->total_transactions ?? 0);
+        $grossSubtotal = round((float) ($summary->gross_subtotal ?? 0), 2);
+        $totalDiscount = round((float) ($summary->total_discount ?? 0), 2);
+        $totalTax = round((float) ($summary->total_tax ?? 0), 2);
+        $netRevenue = round((float) ($summary->net_revenue ?? 0), 2);
         $avgOrderValue = $totalTransactions > 0 ? round($netRevenue / $totalTransactions, 2) : 0.0;
 
-        // Daily breakdown
-        $dailyMap = [];
-        foreach ($sales as $sale) {
-            $day = ($sale->sale_date ?? $sale->created_at ?? now())->format('Y-m-d');
-            if (!isset($dailyMap[$day])) {
-                $dailyMap[$day] = [
-                    'date' => $day,
-                    'transactions' => 0,
-                    'units_sold' => 0,
-                    'subtotal' => 0.0,
-                    'discount_amount' => 0.0,
-                    'tax_amount' => 0.0,
-                    'total_revenue' => 0.0,
-                ];
-            }
-            $dailyMap[$day]['transactions']++;
-            $dailyMap[$day]['subtotal'] = round($dailyMap[$day]['subtotal'] + (float) $sale->subtotal, 2);
-            $dailyMap[$day]['discount_amount'] = round($dailyMap[$day]['discount_amount'] + (float) $sale->discount_amount, 2);
-            $dailyMap[$day]['tax_amount'] = round($dailyMap[$day]['tax_amount'] + (float) $sale->tax_amount, 2);
-            $dailyMap[$day]['total_revenue'] = round($dailyMap[$day]['total_revenue'] + (float) $sale->total_amount, 2);
-        }
+        $dailySales = (clone $salesQuery)
+            ->selectRaw('DATE(COALESCE(sales.sale_date, sales.created_at)) as report_date, COUNT(*) as transactions, SUM(sales.subtotal) as subtotal, SUM(sales.discount_amount) as discount_amount, SUM(sales.tax_amount) as tax_amount, SUM(sales.total_amount) as total_revenue')
+            ->groupByRaw('DATE(COALESCE(sales.sale_date, sales.created_at))')
+            ->orderBy('report_date')
+            ->get();
 
-        foreach ($saleItems as $item) {
-            $day = ($item->sale?->sale_date ?? $item->sale?->created_at ?? now())->format('Y-m-d');
-            if (isset($dailyMap[$day])) {
-                $dailyMap[$day]['units_sold'] += (int) $item->quantity;
-            }
-        }
+        $itemsQuery = $this->filteredItemsQuery($salesQuery, $categoryId, $productId);
+        $itemSummary = (clone $itemsQuery)
+            ->selectRaw('COALESCE(SUM(report_items.quantity), 0) as total_units, COALESCE(SUM(report_items.subtotal), 0) as items_subtotal')
+            ->first();
+        $totalUnitsSold = (int) ($itemSummary->total_units ?? 0);
+        $itemsSubtotalSum = round((float) ($itemSummary->items_subtotal ?? 0), 2);
 
-        ksort($dailyMap);
-        $dailyBreakdown = array_values($dailyMap);
+        $unitsByDay = (clone $itemsQuery)
+            ->selectRaw('DATE(COALESCE(report_sales.sale_date, report_sales.created_at)) as report_date, SUM(report_items.quantity) as units_sold')
+            ->groupByRaw('DATE(COALESCE(report_sales.sale_date, report_sales.created_at))')
+            ->pluck('units_sold', 'report_date');
 
-        // By branch breakdown
-        $branchMap = [];
-        foreach ($sales as $sale) {
-            $bId = (int) $sale->branch_id;
-            if (!isset($branchMap[$bId])) {
-                $branchMap[$bId] = [
-                    'branch_id' => $bId,
-                    'branch_name' => $sale->branch?->name ?? "Branch #{$bId}",
-                    'transactions' => 0,
-                    'subtotal' => 0.0,
-                    'discount_amount' => 0.0,
-                    'tax_amount' => 0.0,
-                    'total_revenue' => 0.0,
-                ];
-            }
-            $branchMap[$bId]['transactions']++;
-            $branchMap[$bId]['subtotal'] = round($branchMap[$bId]['subtotal'] + (float) $sale->subtotal, 2);
-            $branchMap[$bId]['discount_amount'] = round($branchMap[$bId]['discount_amount'] + (float) $sale->discount_amount, 2);
-            $branchMap[$bId]['tax_amount'] = round($branchMap[$bId]['tax_amount'] + (float) $sale->tax_amount, 2);
-            $branchMap[$bId]['total_revenue'] = round($branchMap[$bId]['total_revenue'] + (float) $sale->total_amount, 2);
-        }
-        $byBranch = array_values($branchMap);
+        $dailyBreakdown = $dailySales->map(fn ($row) => [
+            'date' => (string) $row->report_date,
+            'transactions' => (int) $row->transactions,
+            'units_sold' => (int) ($unitsByDay[$row->report_date] ?? 0),
+            'subtotal' => round((float) $row->subtotal, 2),
+            'discount_amount' => round((float) $row->discount_amount, 2),
+            'tax_amount' => round((float) $row->tax_amount, 2),
+            'total_revenue' => round((float) $row->total_revenue, 2),
+        ])->values()->all();
 
-        // By product breakdown
-        $productMap = [];
-        foreach ($saleItems as $item) {
-            $pId = (int) $item->product_id;
-            if (!isset($productMap[$pId])) {
-                $productMap[$pId] = [
-                    'product_id' => $pId,
-                    'product_name' => $item->product?->name ?? "Product #{$pId}",
-                    'sku' => $item->product?->sku ?? '',
-                    'quantity_sold' => 0,
-                    'revenue' => 0.0,
-                ];
-            }
-            $productMap[$pId]['quantity_sold'] += (int) $item->quantity;
-            $productMap[$pId]['revenue'] = round($productMap[$pId]['revenue'] + (float) $item->subtotal, 2);
-        }
-        usort($productMap, fn (array $a, array $b) => $b['revenue'] <=> $a['revenue']);
-        $byProduct = array_values($productMap);
+        $byBranch = (clone $salesQuery)
+            ->leftJoin('branches as report_branches', 'report_branches.id', '=', 'sales.branch_id')
+            ->selectRaw('sales.branch_id, COALESCE(report_branches.name, CONCAT("Branch #", sales.branch_id)) as branch_name, COUNT(*) as transactions, SUM(sales.subtotal) as subtotal, SUM(sales.discount_amount) as discount_amount, SUM(sales.tax_amount) as tax_amount, SUM(sales.total_amount) as total_revenue')
+            ->groupBy('sales.branch_id', 'report_branches.name')
+            ->get()
+            ->map(fn ($row) => [
+                'branch_id' => (int) $row->branch_id,
+                'branch_name' => $row->branch_name,
+                'transactions' => (int) $row->transactions,
+                'subtotal' => round((float) $row->subtotal, 2),
+                'discount_amount' => round((float) $row->discount_amount, 2),
+                'tax_amount' => round((float) $row->tax_amount, 2),
+                'total_revenue' => round((float) $row->total_revenue, 2),
+            ])->values()->all();
 
-        // By payment method breakdown
-        $paymentMap = [];
-        foreach ($sales as $sale) {
-            $pm = strtolower((string) ($sale->payment_method ?: 'cash'));
-            if (!isset($paymentMap[$pm])) {
-                $paymentMap[$pm] = [
-                    'payment_method' => $pm,
-                    'transactions' => 0,
-                    'total_revenue' => 0.0,
-                ];
-            }
-            $paymentMap[$pm]['transactions']++;
-            $paymentMap[$pm]['total_revenue'] = round($paymentMap[$pm]['total_revenue'] + (float) $sale->total_amount, 2);
-        }
-        $byPaymentMethod = array_values($paymentMap);
+        $byProduct = (clone $itemsQuery)
+            ->join('products as report_products', 'report_products.id', '=', 'report_items.product_id')
+            ->selectRaw('report_items.product_id, report_products.name as product_name, report_products.sku, SUM(report_items.quantity) as quantity_sold, SUM(report_items.subtotal) as revenue')
+            ->groupBy('report_items.product_id', 'report_products.name', 'report_products.sku')
+            ->orderByDesc('revenue')
+            ->get()
+            ->map(fn ($row) => [
+                'product_id' => (int) $row->product_id,
+                'product_name' => $row->product_name,
+                'sku' => $row->sku ?? '',
+                'quantity_sold' => (int) $row->quantity_sold,
+                'revenue' => round((float) $row->revenue, 2),
+            ])->values()->all();
+
+        $byPaymentMethod = (clone $salesQuery)
+            ->selectRaw("LOWER(COALESCE(NULLIF(sales.payment_method, ''), 'cash')) as payment_method, COUNT(*) as transactions, SUM(sales.total_amount) as total_revenue")
+            ->groupByRaw("LOWER(COALESCE(NULLIF(sales.payment_method, ''), 'cash'))")
+            ->get()
+            ->map(fn ($row) => [
+                'payment_method' => $row->payment_method,
+                'transactions' => (int) $row->transactions,
+                'total_revenue' => round((float) $row->total_revenue, 2),
+            ])->values()->all();
 
         // Reconciliation verification
         $dailyRevenueSum = round(array_sum(array_column($dailyBreakdown, 'total_revenue')), 2);
@@ -239,6 +167,77 @@ class SalesReportQuery
             'by_product' => $byProduct,
             'by_payment_method' => $byPaymentMethod,
         ];
+    }
+
+    private function filteredSalesQuery(
+        ?int $branchId,
+        ?Carbon $startDate,
+        ?Carbon $endDate,
+        ?int $categoryId,
+        ?int $productId,
+        ?string $paymentMethod,
+        string $status,
+    ) {
+        $query = Sale::query()->where('sales.status', $status);
+
+        if ($branchId !== null) {
+            $query->where('sales.branch_id', $branchId);
+        }
+
+        if ($startDate !== null) {
+            $query->where(function ($q) use ($startDate) {
+                $q->where('sales.sale_date', '>=', $startDate)
+                    ->orWhere(fn ($q2) => $q2->whereNull('sales.sale_date')->where('sales.created_at', '>=', $startDate));
+            });
+        }
+
+        if ($endDate !== null) {
+            $query->where(function ($q) use ($endDate) {
+                $q->where('sales.sale_date', '<=', $endDate)
+                    ->orWhere(fn ($q2) => $q2->whereNull('sales.sale_date')->where('sales.created_at', '<=', $endDate));
+            });
+        }
+
+        if ($paymentMethod !== null) {
+            $query->where('sales.payment_method', $paymentMethod);
+        }
+
+        if ($productId !== null || $categoryId !== null) {
+            $query->whereExists(function ($subquery) use ($productId, $categoryId) {
+                $subquery->selectRaw('1')
+                    ->from('sale_items as report_filter_items')
+                    ->whereColumn('report_filter_items.sale_id', 'sales.id');
+
+                if ($productId !== null) {
+                    $subquery->where('report_filter_items.product_id', $productId);
+                }
+
+                if ($categoryId !== null) {
+                    $subquery->join('products as report_filter_products', 'report_filter_products.id', '=', 'report_filter_items.product_id')
+                        ->where('report_filter_products.category_id', $categoryId);
+                }
+            });
+        }
+
+        return $query;
+    }
+
+    private function filteredItemsQuery($salesQuery, ?int $categoryId, ?int $productId)
+    {
+        $query = DB::table('sale_items as report_items')
+            ->join('sales as report_sales', 'report_sales.id', '=', 'report_items.sale_id')
+            ->whereIn('report_sales.id', (clone $salesQuery)->select('sales.id'));
+
+        if ($productId !== null) {
+            $query->where('report_items.product_id', $productId);
+        }
+
+        if ($categoryId !== null) {
+            $query->join('products as report_item_products', 'report_item_products.id', '=', 'report_items.product_id')
+                ->where('report_item_products.category_id', $categoryId);
+        }
+
+        return $query;
     }
 
     /**
